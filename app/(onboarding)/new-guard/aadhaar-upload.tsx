@@ -3,49 +3,94 @@ import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Card, SectionTitle, Button } from '../../../src/components';
 import { colors, spacing, typography, radius } from '../../../src/theme';
+import { useOnboarding } from '../../../src/context/OnboardingContext';
+
+const OCR_STEPS = [
+  'Uploading Aadhaar...',
+  'Detecting Document...',
+  'Reading Text...',
+  'Extracting Name...',
+  'Extracting Date of Birth...',
+  'Extracting Address...',
+  'Validating Aadhaar...',
+  'OCR Complete'
+];
 
 export default function AadhaarUploadScreen() {
   const router = useRouter();
+  const { updateData } = useOnboarding();
   
   const [frontImage, setFrontImage] = useState<boolean>(false);
   const [backImage, setBackImage] = useState<boolean>(false);
-  
-  // Loading state and animation variables
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [statusText, setStatusText] = useState<string>('');
+
+  // Animation values
   const progress = useRef(new Animated.Value(0)).current;
+  const stepAnimations = useRef(OCR_STEPS.map(() => new Animated.Value(0))).current;
+  const stepTranslateY = useRef(OCR_STEPS.map(() => new Animated.Value(10))).current;
 
-  // Cleanup timeouts on unmount to prevent memory leaks
-  const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
-
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      timeoutRefs.current.forEach(clearTimeout);
+      progress.stopAnimation();
+      stepAnimations.forEach(anim => anim.stopAnimation());
+      stepTranslateY.forEach(anim => anim.stopAnimation());
     };
   }, []);
 
   const handleContinue = () => {
     setIsProcessing(true);
-    setStatusText('Uploading Aadhaar...');
+    
+    // Reset animations
     progress.setValue(0);
+    stepAnimations.forEach(anim => anim.setValue(0));
+    stepTranslateY.forEach(anim => anim.setValue(10));
 
-    Animated.timing(progress, {
-      toValue: 1,
-      duration: 3000,
-      useNativeDriver: false, // Must be false for width animation
-    }).start();
+    const staggerDelay = 400; // ms between each step showing up
+    const stepDuration = 300; // ms for the fade/slide animation
+    const totalDuration = staggerDelay * OCR_STEPS.length;
 
-    // Sequence of mocked processing steps
-    timeoutRefs.current.push(setTimeout(() => setStatusText('Analyzing Document...'), 600));
-    timeoutRefs.current.push(setTimeout(() => setStatusText('Extracting Personal Details...'), 1200));
-    timeoutRefs.current.push(setTimeout(() => setStatusText('Reading Address...'), 1800));
-    timeoutRefs.current.push(setTimeout(() => setStatusText('Completed ✓'), 2400));
-
-    // Navigate to next screen
-    timeoutRefs.current.push(setTimeout(() => {
-      setIsProcessing(false);
-      router.push('/(onboarding)/new-guard/review-details');
-    }, 3000));
+    // Run progress bar and sequence of steps concurrently
+    Animated.parallel([
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: totalDuration,
+        useNativeDriver: false, // width cannot use native driver
+      }),
+      Animated.stagger(
+        staggerDelay,
+        stepAnimations.map((anim, index) => 
+          Animated.parallel([
+            Animated.timing(anim, {
+              toValue: 1,
+              duration: stepDuration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(stepTranslateY[index], {
+              toValue: 0,
+              duration: stepDuration,
+              useNativeDriver: true,
+            })
+          ])
+        )
+      )
+    ]).start(() => {
+      // Small pause after sequence finishes before navigating
+      setTimeout(() => {
+        updateData({
+          fullName: 'Vikram Sharma',
+          dateOfBirth: '15/08/1995',
+          gender: 'Male',
+          aadhaarNumber: '[Aadhaar Redacted]', 
+          address: '123 Main Street',
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          pinCode: '400001',
+        });
+        setIsProcessing(false);
+        router.push('/(onboarding)/new-guard/review-details');
+      }, 600);
+    });
   };
 
   const renderUploadSection = (
@@ -135,10 +180,11 @@ export default function AadhaarUploadScreen() {
         />
       </View>
 
-      {/* Full Screen Loading Overlay */}
+      {/* OCR Processing Animated Overlay */}
       {isProcessing && (
         <View style={styles.processingOverlay}>
-          <Text style={styles.processingText}>{statusText}</Text>
+          <Text style={styles.processingTitle}>Analyzing Document</Text>
+          
           <View style={styles.progressBarBackground}>
             <Animated.View 
               style={[
@@ -152,6 +198,26 @@ export default function AadhaarUploadScreen() {
               ]} 
             />
           </View>
+
+          <View style={styles.stepsContainer}>
+            {OCR_STEPS.map((step, index) => (
+              <Animated.View
+                key={index}
+                style={[
+                  styles.stepRow,
+                  {
+                    opacity: stepAnimations[index],
+                    transform: [{ translateY: stepTranslateY[index] }]
+                  }
+                ]}
+              >
+                <View style={styles.stepCheckCircle}>
+                  <Text style={styles.stepCheckText}>✓</Text>
+                </View>
+                <Text style={styles.stepText}>{step}</Text>
+              </Animated.View>
+            ))}
+          </View>
         </View>
       )}
     </Screen>
@@ -159,105 +225,79 @@ export default function AadhaarUploadScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'space-between',
+  container: { flex: 1, justifyContent: 'space-between' },
+  content: { flex: 1 },
+  header: { marginBottom: spacing.lg, marginTop: spacing.md },
+  uploadCard: { marginBottom: spacing.lg },
+  cardTitle: { fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.semibold, color: colors.text, marginBottom: spacing.md },
+  buttonGroup: { width: '100%' },
+  actionButton: { width: '100%' },
+  buttonSpacer: { height: spacing.sm },
+  previewContainer: { width: '100%' },
+  previewBox: { height: 140, backgroundColor: colors.background, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', marginBottom: spacing.md },
+  previewText: { color: colors.textSecondary, fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.medium },
+  infoCard: { backgroundColor: colors.background, marginTop: spacing.xs, marginBottom: spacing.xl },
+  infoTitle: { fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.semibold, color: colors.success, marginBottom: spacing.sm },
+  bulletPoints: { paddingLeft: spacing.sm },
+  bulletText: { fontSize: typography.fontSize.sm, color: colors.textSecondary, marginBottom: spacing.xs },
+  footer: { paddingVertical: spacing.md, marginTop: spacing.md },
+  button: { width: '100%' },
+  
+  // Processing Overlay Styles
+  processingOverlay: { 
+    ...StyleSheet.absoluteFillObject, 
+    backgroundColor: colors.surface, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    paddingHorizontal: spacing.xl, 
+    zIndex: 10 
   },
-  content: {
-    flex: 1,
+  processingTitle: { 
+    fontSize: typography.fontSize.xl, 
+    fontWeight: typography.fontWeight.bold, 
+    color: colors.text, 
+    marginBottom: spacing.xl, 
+    textAlign: 'center' 
   },
-  header: {
+  progressBarBackground: { 
+    width: '100%', 
+    height: 8, 
+    backgroundColor: colors.background, 
+    borderRadius: radius.full, 
+    overflow: 'hidden' 
+  },
+  progressBarFill: { 
+    height: '100%', 
+    backgroundColor: colors.primary, 
+    borderRadius: radius.full 
+  },
+  stepsContainer: {
+    width: '100%',
+    marginTop: spacing['3xl'],
+    paddingHorizontal: spacing.md,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: spacing.lg,
-    marginTop: spacing.md,
   },
-  uploadCard: {
-    marginBottom: spacing.lg,
-  },
-  cardTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  buttonGroup: {
-    width: '100%',
-  },
-  actionButton: {
-    width: '100%',
-  },
-  buttonSpacer: {
-    height: spacing.sm,
-  },
-  previewContainer: {
-    width: '100%',
-  },
-  previewBox: {
-    height: 140,
-    backgroundColor: colors.background,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
+  stepCheckCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.success,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginRight: spacing.md,
   },
-  previewText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
+  stepCheckText: {
+    color: colors.white,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
   },
-  infoCard: {
-    backgroundColor: colors.background,
-    marginTop: spacing.xs,
-    marginBottom: spacing.xl,
-  },
-  infoTitle: {
+  stepText: {
     fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.success,
-    marginBottom: spacing.sm,
-  },
-  bulletPoints: {
-    paddingLeft: spacing.sm,
-  },
-  bulletText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-  },
-  footer: {
-    paddingVertical: spacing.md,
-    marginTop: spacing.md,
-  },
-  button: {
-    width: '100%',
-  },
-  processingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    zIndex: 10,
-  },
-  processingText: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
     color: colors.text,
-    marginBottom: spacing.xl,
-    textAlign: 'center',
-  },
-  progressBarBackground: {
-    width: '100%',
-    height: 8,
-    backgroundColor: colors.background,
-    borderRadius: radius.full,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: radius.full,
+    fontWeight: typography.fontWeight.medium,
   },
 });

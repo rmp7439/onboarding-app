@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Screen, SectionTitle, Button } from '../../../src/components';
-import { colors, spacing, typography, radius } from '../../../src/theme';
+import React, { useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
+import { Screen, SectionTitle, Button } from "../../../src/components";
+import { colors, spacing, typography, radius } from "../../../src/theme";
+import { useOnboarding } from "../../../src/context/OnboardingContext";
 
 export default function CapturePhotoScreen() {
   const router = useRouter();
+  const { updateData } = useOnboarding();
   const [isCaptured, setIsCaptured] = useState(false);
 
   const handleCapture = () => {
@@ -17,7 +19,8 @@ export default function CapturePhotoScreen() {
   };
 
   const handleUsePhoto = () => {
-    router.push('/(onboarding)/new-guard/documents');
+    updateData({ employeePhoto: "live_photo.jpg" });
+    router.push("/(onboarding)/new-guard/documents");
   };
 
   return (
@@ -32,7 +35,6 @@ export default function CapturePhotoScreen() {
         <View style={styles.cameraWrapper}>
           {isCaptured ? (
             <View style={styles.capturedContainer}>
-              {/* Dummy Employee Photo Placeholder */}
               <View style={styles.dummyAvatar}>
                 <View style={styles.dummyHead} />
                 <View style={styles.dummyBody} />
@@ -41,12 +43,11 @@ export default function CapturePhotoScreen() {
             </View>
           ) : (
             <View style={styles.viewfinderContainer}>
-              {/* Camera Frame Corners */}
               <View style={[styles.corner, styles.topLeft]} />
               <View style={[styles.corner, styles.topRight]} />
               <View style={[styles.corner, styles.bottomLeft]} />
               <View style={[styles.corner, styles.bottomRight]} />
-              
+
               <Text style={styles.viewfinderText}>Camera Feed Active</Text>
               <Text style={styles.viewfinderSubtext}>(Simulated)</Text>
             </View>
@@ -82,35 +83,27 @@ export default function CapturePhotoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  content: {
-    flex: 1,
-  },
-  header: {
-    marginBottom: spacing.xl,
-    marginTop: spacing.md,
-  },
+  container: { flex: 1, justifyContent: "space-between" },
+  content: { flex: 1 },
+  header: { marginBottom: spacing.xl, marginTop: spacing.md },
   cameraWrapper: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: spacing.xl,
   },
   viewfinderContainer: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 3 / 4,
-    backgroundColor: '#1C1C1E', // Dark camera background
+    backgroundColor: "#1C1C1E",
     borderRadius: radius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    overflow: 'hidden',
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    overflow: "hidden",
   },
   corner: {
-    position: 'absolute',
+    position: "absolute",
     width: 40,
     height: 40,
     borderColor: colors.white,
@@ -150,19 +143,19 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   capturedContainer: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 3 / 4,
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
   },
   dummyAvatar: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: spacing.md,
   },
   dummyHead: {
@@ -185,17 +178,8 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.medium,
     marginTop: spacing.md,
   },
-  footer: {
-    paddingVertical: spacing.md,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  halfButton: {
-    flex: 1,
-  },
-  fullButton: {
-    width: '100%',
-  },
+  footer: { paddingVertical: spacing.md },
+  buttonRow: { flexDirection: "row", gap: spacing.md },
+  halfButton: { flex: 1 },
+  fullButton: { width: "100%" },
 });

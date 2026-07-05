@@ -1,77 +1,105 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Card, SectionTitle, Button } from '../../src/components';
+import { Screen, Card, SectionTitle } from '../../src/components';
 import { colors, spacing, typography, radius } from '../../src/theme';
+
+const RECENT_EMPLOYEES = [
+  { id: '1', name: 'Vikram Sharma', status: 'Pending', time: '10:30 AM' },
+  { id: '2', name: 'Suresh Singh', status: 'Completed', time: '09:15 AM' },
+  { id: '3', name: 'Amit Kumar', status: 'Rejected', time: 'Yesterday' },
+  { id: '4', name: 'Rahul Verma', status: 'Completed', time: 'Yesterday' },
+];
 
 export default function HomeScreen() {
   const router = useRouter();
 
   const handleStartRegistration = () => {
-    router.push('/(onboarding)/new-guard');
+    router.push('/(onboarding)/new-guard/aadhaar-upload');
   };
 
-  const recentActivity = [
-    { id: '1', name: 'Ramesh Kumar', status: 'Pending Review', time: '10:30 AM' },
-    { id: '2', name: 'Suresh Singh', status: 'Completed', time: '09:15 AM' },
-    { id: '3', name: 'Amit Sharma', status: 'Aadhaar Missing', time: 'Yesterday' },
-  ];
+  const getBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'Completed':
+        return { backgroundColor: '#E8F8EE', color: colors.success }; // Light green
+      case 'Pending':
+        return { backgroundColor: '#FFF3E0', color: colors.warning }; // Light orange
+      case 'Rejected':
+        return { backgroundColor: '#FFEBEE', color: colors.error };   // Light red
+      default:
+        return { backgroundColor: colors.background, color: colors.textSecondary };
+    }
+  };
 
   return (
     <Screen style={styles.container}>
-      {/* Header */}
+      {/* Welcome Header */}
       <View style={styles.header}>
-        <Text style={styles.greetingText}>Good Morning,</Text>
+        <Text style={styles.greetingText}>Welcome back,</Text>
         <Text style={styles.roleText}>Site Incharge</Text>
       </View>
 
-      {/* Primary Card */}
+      {/* Quick Action */}
       <TouchableOpacity activeOpacity={0.8} onPress={handleStartRegistration}>
-        <Card style={styles.primaryCard}>
-          <Text style={styles.primaryCardText}>+ Register New Employee</Text>
+        <Card style={styles.actionCard}>
+          <View style={styles.actionIconContainer}>
+            <Text style={styles.actionIcon}>+</Text>
+          </View>
+          <View>
+            <Text style={styles.actionTitle}>Register New Employee</Text>
+            <Text style={styles.actionSubtitle}>Start the onboarding process</Text>
+          </View>
         </Card>
       </TouchableOpacity>
 
-      {/* Quick Stats */}
-      <SectionTitle title="Quick Stats" style={styles.sectionHeader} />
+      {/* Statistics */}
+      <SectionTitle title="Overview" style={styles.sectionHeader} />
       <View style={styles.statsContainer}>
-        <Card style={styles.statCard}>
-          <Text style={styles.statValue}>5</Text>
-          <Text style={styles.statLabel}>Today's</Text>
-          <Text style={styles.statLabel}>Registrations</Text>
-        </Card>
-        <Card style={styles.statCard}>
-          <Text style={styles.statValue}>2</Text>
-          <Text style={styles.statLabel}>Pending</Text>
-          <Text style={styles.statLabel}>Reviews</Text>
-        </Card>
-        <Card style={styles.statCard}>
-          <Text style={styles.statValue}>3</Text>
-          <Text style={styles.statLabel}>Completed</Text>
-          <Text style={styles.statLabel}>Today</Text>
-        </Card>
-      </View>
-
-      {/* Recent Activity */}
-      <SectionTitle title="Recent Activity" style={styles.sectionHeader} />
-      <View style={styles.activityContainer}>
-        {recentActivity.map((item) => (
-          <Card key={item.id} style={styles.activityCard}>
-            <View>
-              <Text style={styles.activityName}>{item.name}</Text>
-              <Text style={styles.activityStatus}>{item.status}</Text>
-            </View>
-            <Text style={styles.activityTime}>{item.time}</Text>
+        <View style={styles.statsRow}>
+          <Card style={styles.statCard}>
+            <Text style={[styles.statValue, { color: colors.primary }]}>12</Text>
+            <Text style={styles.statLabel}>Today's</Text>
+            <Text style={styles.statLabel}>Registrations</Text>
           </Card>
-        ))}
+          <Card style={styles.statCard}>
+            <Text style={[styles.statValue, { color: colors.warning }]}>3</Text>
+            <Text style={styles.statLabel}>Pending</Text>
+            <Text style={styles.statLabel}>Verification</Text>
+          </Card>
+        </View>
+        <View style={styles.statsRow}>
+          <Card style={styles.statCard}>
+            <Text style={[styles.statValue, { color: colors.success }]}>8</Text>
+            <Text style={styles.statLabel}>Completed</Text>
+            <Text style={styles.statLabel}>Today</Text>
+          </Card>
+          <Card style={styles.statCard}>
+            <Text style={[styles.statValue, { color: colors.error }]}>1</Text>
+            <Text style={styles.statLabel}>Rejected</Text>
+            <Text style={styles.statLabel}>Applications</Text>
+          </Card>
+        </View>
       </View>
 
-      {/* Primary CTA */}
-      <View style={styles.footer}>
-        <Button 
-          title="Start New Registration" 
-          onPress={handleStartRegistration} 
-        />
+      {/* Recent Employees */}
+      <SectionTitle title="Recent Employees" style={styles.sectionHeader} />
+      <View style={styles.activityContainer}>
+        {RECENT_EMPLOYEES.map((employee) => {
+          const badgeTheme = getBadgeStyle(employee.status);
+          return (
+            <Card key={employee.id} style={styles.employeeCard}>
+              <View style={styles.employeeInfo}>
+                <Text style={styles.employeeName}>{employee.name}</Text>
+                <View style={[styles.badge, { backgroundColor: badgeTheme.backgroundColor }]}>
+                  <Text style={[styles.badgeText, { color: badgeTheme.color }]}>
+                    {employee.status}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.employeeTime}>{employee.time}</Text>
+            </Card>
+          );
+        })}
       </View>
     </Screen>
   );
@@ -91,75 +119,103 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   roleText: {
-    fontSize: typography.fontSize['2xl'],
+    fontSize: typography.fontSize['3xl'],
     fontWeight: typography.fontWeight.bold,
     color: colors.text,
   },
-  primaryCard: {
+  actionCard: {
     backgroundColor: colors.primary,
-    paddingVertical: spacing.xl,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
     marginBottom: spacing['2xl'],
+    borderRadius: radius.lg,
   },
-  primaryCardText: {
+  actionIconContainer: {
+    width: 48,
+    height: 48,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: radius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  actionIcon: {
+    color: colors.white,
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: typography.fontWeight.bold,
+  },
+  actionTitle: {
     color: colors.white,
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
+    marginBottom: 2,
+  },
+  actionSubtitle: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: typography.fontSize.sm,
   },
   sectionHeader: {
     marginBottom: spacing.md,
   },
   statsContainer: {
+    marginBottom: spacing['2xl'],
+    gap: spacing.md,
+  },
+  statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: spacing.sm,
-    marginBottom: spacing['2xl'],
+    gap: spacing.md,
   },
   statCard: {
     flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    alignItems: 'flex-start',
   },
   statValue: {
-    fontSize: typography.fontSize['2xl'],
+    fontSize: typography.fontSize['3xl'],
     fontWeight: typography.fontWeight.bold,
-    color: colors.primary,
     marginBottom: spacing.xs,
   },
   statLabel: {
-    fontSize: typography.fontSize.xs,
+    fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
-    textAlign: 'center',
+    fontWeight: typography.fontWeight.medium,
   },
   activityContainer: {
-    marginBottom: spacing['2xl'],
+    marginBottom: spacing.xl,
+    gap: spacing.sm,
   },
-  activityCard: {
+  employeeCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: spacing.md,
-    marginBottom: spacing.sm,
   },
-  activityName: {
+  employeeInfo: {
+    flex: 1,
+  },
+  employeeName: {
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.semibold,
     color: colors.text,
     marginBottom: spacing.xs,
   },
-  activityStatus: {
+  badge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+  },
+  badgeText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+  },
+  employeeTime: {
     fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
-  },
-  activityTime: {
-    fontSize: typography.fontSize.xs,
-    color: colors.textSecondary,
     fontWeight: typography.fontWeight.medium,
-  },
-  footer: {
-    marginTop: 'auto',
-    paddingVertical: spacing.md,
   },
 });
