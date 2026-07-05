@@ -1,91 +1,48 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TextInput, Keyboard } from 'react-native';
+import { View, StyleSheet, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Button, SectionTitle } from '../../src/components';
-import { colors, spacing, radius, typography } from '../../src/theme';
+import { Screen, Card, SectionTitle, Button } from '../../src/components';
+import { colors, spacing, typography, radius } from '../../src/theme';
+import { validatePhoneNumber } from '../../src/utils/validation';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [error, setError] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
+  const [phone, setPhone] = useState('');
 
-  const handleNumberChange = (text: string) => {
-    const numericText = text.replace(/[^0-9]/g, '');
-    setMobileNumber(numericText);
-    if (error) {
-      setError('');
-    }
-  };
+  const isValid = validatePhoneNumber(phone);
 
   const handleContinue = () => {
-    Keyboard.dismiss();
-    
-    if (mobileNumber.length < 10) {
-      setError('Please enter a valid 10-digit phone number');
-      return;
+    if (isValid) {
+      router.push('/otp');
     }
-
-    if (mobileNumber !== '9876543210') {
-      setError('Invalid Phone Number');
-      return;
-    }
-
-    setError('');
-    router.push('/(auth)/otp');
   };
 
   return (
-    <Screen scrollable={false} style={styles.screen}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.content}>
-          <View style={styles.logoPlaceholder}>
-            <Text style={styles.logoText}>EO</Text>
-          </View>
-
-          <SectionTitle 
-            title="Employee Onboarding" 
-            subtitle="Sign in to continue" 
-            style={styles.header}
+    <Screen style={styles.container}>
+      <View style={styles.content}>
+        <SectionTitle 
+          title="Sign In" 
+          subtitle="Enter your mobile number to continue" 
+          style={styles.header} 
+        />
+        <Card style={styles.card}>
+          <TextInput
+            style={styles.input}
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="Mobile Number"
+            keyboardType="numeric"
+            maxLength={10}
+            placeholderTextColor={colors.textSecondary}
           />
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Enter Mobile Number</Text>
-            <View 
-              style={[
-                styles.underlineInputContainer,
-                isFocused && styles.underlineInputContainerFocused,
-                !!error && styles.underlineInputContainerError
-              ]}
-            >
-              <TextInput
-                style={styles.inputText}
-                value={mobileNumber}
-                onChangeText={handleNumberChange}
-                onFocus={() => { setIsFocused(true); setError(''); }}
-                onBlur={() => setIsFocused(false)}
-                keyboardType="numeric"
-                maxLength={10}
-                selectionColor={colors.primary}
-              />
-            </View>
-            
-            {!!error && <Text style={styles.errorText}>{error}</Text>}
-          </View>
-        </View>
-      </ScrollView>
-
+        </Card>
+      </View>
       <View style={styles.footer}>
-        <Button
-          title="Continue"
-          disabled={mobileNumber.length !== 10}
-          onPress={handleContinue}
-          style={styles.button}
+        <Button 
+          title="Continue" 
+          onPress={handleContinue} 
+          disabled={!isValid} 
+          style={styles.button} 
         />
       </View>
     </Screen>
@@ -93,80 +50,20 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingTop: spacing['2xl'],
-  },
-  content: {
-    flex: 1,
-  },
-  logoPlaceholder: {
-    width: 56,
-    height: 56,
-    backgroundColor: colors.primary,
-    borderRadius: radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  logoText: {
-    color: colors.white,
-    fontWeight: typography.fontWeight.bold,
-    fontSize: typography.fontSize.xl,
-    letterSpacing: 1,
-  },
-  header: {
-    marginBottom: spacing['2xl'],
-  },
-  inputContainer: {
-    width: '100%',
-  },
-  inputLabel: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-  },
-  underlineInputContainer: {
-    borderBottomWidth: 2,
+  container: { flex: 1, justifyContent: 'space-between' },
+  content: { flex: 1 },
+  header: { marginBottom: spacing.xl, marginTop: spacing.xl },
+  card: { padding: spacing.md },
+  input: {
+    borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: spacing.xs,
-  },
-  underlineInputContainerFocused: {
-    borderColor: colors.primary,
-  },
-  underlineInputContainerError: {
-    borderColor: colors.error,
-  },
-  inputText: {
-    fontSize: 28,
-    fontWeight: typography.fontWeight.bold,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: typography.fontSize.md,
     color: colors.text,
-    letterSpacing: 2,
-    padding: 0, 
+    backgroundColor: colors.surface,
   },
-  errorText: {
-    color: colors.error,
-    fontSize: typography.fontSize.sm,
-    marginTop: spacing.sm,
-    fontWeight: typography.fontWeight.medium,
-  },
-  demoHint: {
-    fontSize: typography.fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: spacing.lg,
-  },
-  footer: {
-    paddingTop: spacing.md,
-    paddingBottom: 24, 
-  },
-  button: {
-    width: '100%',
-  },
+  footer: { paddingVertical: spacing.md, marginTop: spacing.md },
+  button: { width: '100%' },
 });

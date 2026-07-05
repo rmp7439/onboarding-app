@@ -1,88 +1,60 @@
-import React, { useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Image, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Screen, Card, SectionTitle, Button } from "../../../src/components";
 import { colors, spacing, typography, radius } from "../../../src/theme";
 import { useOnboarding } from "../../../src/context/OnboardingContext";
+import { scannerService } from "../../../src/services/scanner/ScannerService";
+import { DocumentItem } from "../../../src/types/Document";
+import { DOCUMENT_TYPES } from "../../../src/constants/App";
+import { useImagePickerAction } from "../../../src/hooks/useImagePickerAction";
 
-type DocStatus = "idle" | "uploading" | "uploaded";
-
-interface DocumentItem {
-  id: string;
-  title: string;
-  status: DocStatus;
-  progress: number;
-}
-
-const INITIAL_DOCUMENTS: DocumentItem[] = [
-  { id: "pan", title: "PAN Card", status: "idle", progress: 0 },
-  { id: "police", title: "Police Verification", status: "idle", progress: 0 },
-  { id: "bank", title: "Bank Passbook", status: "idle", progress: 0 },
-  { id: "driving", title: "Driving Licence", status: "idle", progress: 0 },
-  {
-    id: "education",
-    title: "Educational Certificate",
-    status: "idle",
-    progress: 0,
-  },
-  { id: "photo", title: "Passport Photo", status: "idle", progress: 0 },
-];
+const INITIAL_DOCUMENTS: DocumentItem[] = DOCUMENT_TYPES.map((doc) => ({
+  ...doc,
+  uri: null,
+  filename: null,
+}));
 
 export default function DocumentsScreen() {
   const router = useRouter();
   const { updateData } = useOnboarding();
+  const { openPicker, PickerComponent } = useImagePickerAction();
   const [documents, setDocuments] = useState<DocumentItem[]>(INITIAL_DOCUMENTS);
-  const timeouts = useRef<NodeJS.Timeout[]>([]);
 
-  useEffect(() => {
-    return () => {
-      timeouts.current.forEach(clearTimeout);
-    };
-  }, []);
-
-  const handleUpload = (id: string) => {
-    setDocuments((prev) =>
-      prev.map((doc) =>
-        doc.id === id ? { ...doc, status: "uploading", progress: 0 } : doc,
-      ),
-    );
-
-    let currentProgress = 0;
-    const simulateProgress = () => {
-      currentProgress += Math.floor(Math.random() * 30) + 15;
-
-      if (currentProgress >= 100) {
+  const handlePickImage = async (id: string, source: "gallery" | "camera") => {
+    try {
+      const result =
+        source === "gallery"
+          ? await scannerService.pickFromGallery()
+          : await scannerService.captureFromCamera();
+      if (result) {
         setDocuments((prev) =>
           prev.map((doc) =>
-            doc.id === id ? { ...doc, status: "uploaded", progress: 100 } : doc,
+            doc.id === id
+              ? { ...doc, uri: result.uri, filename: result.filename }
+              : doc,
           ),
         );
-      } else {
-        setDocuments((prev) =>
-          prev.map((doc) =>
-            doc.id === id ? { ...doc, progress: currentProgress } : doc,
-          ),
-        );
-        const nextTimeout = setTimeout(simulateProgress, 300);
-        timeouts.current.push(nextTimeout);
       }
-    };
-
-    const initialTimeout = setTimeout(simulateProgress, 300);
-    timeouts.current.push(initialTimeout);
+    } catch (error: any) {
+      Alert.alert(
+        "Error",
+        error.message || "Something went wrong while attaching the document.",
+      );
+    }
   };
 
   const handleRemove = (id: string) => {
     setDocuments((prev) =>
       prev.map((doc) =>
-        doc.id === id ? { ...doc, status: "idle", progress: 0 } : doc,
+        doc.id === id ? { ...doc, uri: null, filename: null } : doc,
       ),
     );
   };
 
   const handleContinue = () => {
     const uploadedDocs = documents
-      .filter((doc) => doc.status === "uploaded")
+      .filter((doc) => doc.uri !== null)
       .map((doc) => doc.title);
     updateData({ uploadedDocuments: uploadedDocs });
     router.push("/(onboarding)/new-guard/review");
@@ -101,47 +73,65 @@ export default function DocumentsScreen() {
           <Card key={doc.id} style={styles.card}>
             <View style={styles.cardHeader}>
               <Text style={styles.docTitle}>{doc.title}</Text>
-              {doc.status === "uploaded" && (
-                <View style={styles.checkmarkContainer}>
-                  <Text style={styles.checkmark}>✓</Text>
+              {doc.uri && (
+                <View style={styles.uploadedBadge}>
+                  <Text style={styles.uploadedBadgeText}>✓ Attached</Text>
                 </View>
               )}
             </View>
 
-            {doc.status === "idle" && (
+            {!doc.uri ? (
               <Button
-                title="Upload"
+                title="Upload Document"
                 variant="outline"
-                onPress={() => handleUpload(doc.id)}
+                onPress={() =>
+                  openPicker(
+                    () => handlePickImage(doc.id, "camera"),
+                    () => handlePickImage(doc.id, "gallery"),
+                  )
+                }
                 style={styles.actionButton}
               />
-            )}
+            ) : (
+              <View style={styles.attachmentContainer}>
+                <View style={styles.fileInfoRow}>
+                  <Image
+                    source={{ uri: doc.uri }}
+                    style={styles.thumbnail}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.fileDetails}>
+                    <Text
+                      style={styles.filenameText}
+                      numberOfLines={1}
+                      ellipsizeMode="middle"
+                    >
+                      {doc.filename}
+                    </Text>
+                    <Text style={styles.fileStatusText}>Ready for upload</Text>
+                  </View>
+                </View>
 
-            {doc.status === "uploading" && (
-              <View style={styles.progressContainer}>
-                <View style={styles.progressBarBackground}>
-                  <View
-                    style={[
-                      styles.progressBarFill,
-                      { width: `${doc.progress}%` },
-                    ]}
+                <View style={styles.cardActionRow}>
+                  <Button
+                    title="Replace"
+                    variant="outline"
+                    onPress={() =>
+                      openPicker(
+                        () => handlePickImage(doc.id, "camera"),
+                        () => handlePickImage(doc.id, "gallery"),
+                      )
+                    }
+                    style={styles.halfBtn}
+                  />
+                  <View style={styles.actionSpacer} />
+                  <Button
+                    title="Remove"
+                    variant="outline"
+                    onPress={() => handleRemove(doc.id)}
+                    style={styles.halfBtn}
                   />
                 </View>
-                <Text style={styles.progressText}>
-                  Uploading... {doc.progress}%
-                </Text>
-              </View>
-            )}
-
-            {doc.status === "uploaded" && (
-              <View style={styles.uploadedContainer}>
-                <Text style={styles.uploadedText}>Document attached</Text>
-                <Button
-                  title="Remove"
-                  variant="outline"
-                  onPress={() => handleRemove(doc.id)}
-                  style={styles.removeButton}
-                />
               </View>
             )}
           </Card>
@@ -155,6 +145,8 @@ export default function DocumentsScreen() {
           style={styles.fullButton}
         />
       </View>
+
+      <PickerComponent />
     </Screen>
   );
 }
@@ -168,62 +160,56 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   docTitle: {
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.semibold,
     color: colors.text,
   },
-  checkmarkContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.success,
-    justifyContent: "center",
-    alignItems: "center",
+  uploadedBadge: {
+    backgroundColor: "#E8F8EE",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.full,
   },
-  checkmark: {
-    color: colors.white,
-    fontSize: typography.fontSize.sm,
+  uploadedBadgeText: {
+    color: colors.success,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
   },
-  actionButton: { height: 40 },
-  progressContainer: { marginTop: spacing.xs },
-  progressBarBackground: {
-    width: "100%",
-    height: 6,
+  actionButton: { height: 44 },
+  attachmentContainer: { marginTop: spacing.xs },
+  fileInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.background,
-    borderRadius: radius.full,
-    overflow: "hidden",
-    marginBottom: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: colors.primary,
-    borderRadius: radius.full,
+  thumbnail: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surface,
   },
-  progressText: {
+  fileDetails: { flex: 1, marginLeft: spacing.md },
+  filenameText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.text,
+    marginBottom: 2,
+  },
+  fileStatusText: {
     fontSize: typography.fontSize.xs,
     color: colors.textSecondary,
-    textAlign: "right",
   },
-  uploadedContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: spacing.xs,
-  },
-  uploadedText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textSecondary,
-    fontWeight: typography.fontWeight.medium,
-  },
-  removeButton: {
-    height: 32,
-    paddingHorizontal: spacing.md,
-    borderColor: colors.error,
-  },
+  cardActionRow: { flexDirection: "row", justifyContent: "space-between" },
+  halfBtn: { flex: 1, height: 40 },
+  actionSpacer: { width: spacing.sm },
   footer: { paddingVertical: spacing.md, marginTop: spacing.md },
   fullButton: { width: "100%" },
 });

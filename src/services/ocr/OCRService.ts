@@ -1,5 +1,22 @@
+import { OCRResult } from '../../types/OCR';
+import { OCR_SIMULATION_DURATION_MS, OCR_MOCK_CONFIDENCE, OCR_MOCK_RAW_TEXT } from '../../constants/OCR';
+
 export interface OCRService {
-  extractText(imageUri: string): Promise<string>;
+  extract(imageFront: string, imageBack: string): Promise<OCRResult>;
 }
 
-// TODO: Implement OCRService (e.g., integrating Google Cloud Vision, AWS Textract, or a local ML model)
+class OCRServiceImpl implements OCRService {
+  async extract(imageFront: string, imageBack: string): Promise<OCRResult> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          rawText: OCR_MOCK_RAW_TEXT,
+          confidence: OCR_MOCK_CONFIDENCE,
+        });
+      }, OCR_SIMULATION_DURATION_MS);
+    });
+  }
+}
+
+export const ocrService = new OCRServiceImpl();

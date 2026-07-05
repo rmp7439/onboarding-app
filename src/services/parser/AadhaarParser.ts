@@ -1,18 +1,16 @@
-export interface AadhaarData {
-  fullName: string;
-  dateOfBirth: string;
-  gender: string;
-  aadhaarNumber: string;
-  address: string;
+import { AadhaarData } from '../../types/Aadhaar';
+import { DEMO_DATA } from '../../constants/App';
+
+export interface AadhaarParserService {
+  parse(text: string): Promise<AadhaarData>;
 }
 
-export function parseAadhaar(text: string): AadhaarData {
-  // TODO: Implement parsing logic (e.g., Regex patterns to extract fields from raw OCR text)
-  return {
-    fullName: '',
-    dateOfBirth: '',
-    gender: '',
-    aadhaarNumber: '',
-    address: '',
-  };
+class AadhaarParserServiceImpl implements AadhaarParserService {
+  async parse(text: string): Promise<AadhaarData> {
+    // TODO: Implement actual parsing logic (e.g., Regex patterns to extract fields from raw OCR text)
+    // Wrapped in a promise to standardize async service layer
+    return Promise.resolve(DEMO_DATA.EMPLOYEE);
+  }
 }
+
+export const aadhaarParser = new AadhaarParserServiceImpl();

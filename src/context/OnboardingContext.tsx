@@ -1,19 +1,33 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { AadhaarData } from '../types/Aadhaar';
 
-export interface OnboardingData {
-  fullName: string;
-  dateOfBirth: string;
-  gender: string;
-  aadhaarNumber: string;
-  address: string;
-  city: string;
-  state: string;
-  pinCode: string;
-  employeePhoto: string | null;
-  uploadedDocuments: string[];
+// 1. Logical Grouping Interfaces
+export interface MediaData {
+  aadhaarFrontUri?: string | null;
+  aadhaarBackUri?: string | null;
+  selfieUri?: string | null;
+  uploadedDocuments?: string[];
 }
 
-const defaultData: OnboardingData = {
+export interface OCRMetaData {
+  ocrConfidence?: number;
+  ocrRawText?: string;
+  editedFields?: string[];
+}
+
+// 2. Flat Data Model 
+// Combines the logical groups into a single flat interface to preserve backward compatibility
+// so that existing screens can continue using `data.fullName`, `updateData({ fullName: '...' })`, etc.
+export interface OnboardingData extends Partial<AadhaarData>, MediaData, OCRMetaData {}
+
+interface OnboardingContextType {
+  data: OnboardingData;
+  updateData: (newData: Partial<OnboardingData>) => void;
+  resetData: () => void;
+}
+
+const INITIAL_DATA: OnboardingData = {
+  // Personal & Document Info (from AadhaarData)
   fullName: '',
   dateOfBirth: '',
   gender: '',
@@ -22,27 +36,30 @@ const defaultData: OnboardingData = {
   city: '',
   state: '',
   pinCode: '',
-  employeePhoto: null,
-  uploadedDocuments: [],
-};
 
-interface OnboardingContextType {
-  data: OnboardingData;
-  updateData: (newData: Partial<OnboardingData>) => void;
-  resetData: () => void;
-}
+  // Media Attachments (from MediaData)
+  aadhaarFrontUri: null,
+  aadhaarBackUri: null,
+  selfieUri: null,
+  uploadedDocuments: [],
+
+  // Processing Meta (from OCRMetaData)
+  ocrConfidence: 0,
+  ocrRawText: '',
+  editedFields: [],
+};
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<OnboardingData>(defaultData);
+  const [data, setData] = useState<OnboardingData>(INITIAL_DATA);
 
   const updateData = (newData: Partial<OnboardingData>) => {
     setData((prev) => ({ ...prev, ...newData }));
   };
 
   const resetData = () => {
-    setData(defaultData);
+    setData(INITIAL_DATA);
   };
 
   return (
@@ -54,7 +71,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
 export function useOnboarding() {
   const context = useContext(OnboardingContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useOnboarding must be used within an OnboardingProvider');
   }
   return context;

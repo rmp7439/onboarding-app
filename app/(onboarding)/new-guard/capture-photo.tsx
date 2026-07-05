@@ -1,185 +1,243 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
-import { Screen, SectionTitle, Button } from "../../../src/components";
-import { colors, spacing, typography, radius } from "../../../src/theme";
-import { useOnboarding } from "../../../src/context/OnboardingContext";
+import React, { useState, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  Pressable, 
+  Animated, 
+  SafeAreaView 
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Screen, SectionTitle, Button, Card } from '../../../src/components';
+import { colors, spacing, typography, radius } from '../../../src/theme';
+import { useOnboarding } from '../../../src/context/OnboardingContext';
 
 export default function CapturePhotoScreen() {
   const router = useRouter();
   const { updateData } = useOnboarding();
-  const [isCaptured, setIsCaptured] = useState(false);
+  const [photo, setPhoto] = useState<string | null>(null);
+
+  const flashAnim = useRef(new Animated.Value(0)).current;
 
   const handleCapture = () => {
-    setIsCaptured(true);
+    // 1. Trigger realistic camera flash animation
+    Animated.sequence([
+      Animated.timing(flashAnim, {
+        toValue: 1,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(flashAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      // 2. Set mock URI to trigger preview state
+      setPhoto(`capture_${Date.now()}`); 
+    });
   };
 
   const handleRetake = () => {
-    setIsCaptured(false);
+    setPhoto(null);
   };
 
-  const handleUsePhoto = () => {
-    updateData({ employeePhoto: "live_photo.jpg" });
-    router.push("/(onboarding)/new-guard/documents");
+  const handleContinue = () => {
+    if (photo) {
+      updateData({ selfieUri: photo });
+      router.push('/(onboarding)/new-guard/documents');
+    }
   };
 
+  // ---------------------------------------------------------------------------
+  // PREVIEW STATE
+  // ---------------------------------------------------------------------------
+  if (photo) {
+    return (
+      <Screen style={styles.container}>
+        <View style={styles.content}>
+          <SectionTitle
+            title="Review Photo"
+            subtitle="Ensure your face is clearly visible, well-lit, and directly facing the camera."
+            style={styles.header}
+          />
+          <Card style={styles.previewCard}>
+            <View style={styles.capturedPlaceholder}>
+              <Text style={styles.capturedIcon}>👤</Text>
+            </View>
+          </Card>
+        </View>
+
+        <View style={styles.footer}>
+          <Button
+            title="Use Photo"
+            onPress={handleContinue}
+            style={styles.fullButton}
+          />
+          <Button
+            title="Retake"
+            variant="outline"
+            onPress={handleRetake}
+            style={[styles.fullButton, styles.secondaryButton]}
+          />
+        </View>
+      </Screen>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // CAMERA CAPTURE STATE
+  // ---------------------------------------------------------------------------
   return (
-    <Screen style={styles.container}>
-      <View style={styles.content}>
-        <SectionTitle
-          title="Capture Employee Photo"
-          subtitle="Ensure the employee's face is clearly visible."
-          style={styles.header}
-        />
+    <SafeAreaView style={styles.cameraContainer}>
+      <View style={styles.cameraHeader}>
+        <Text style={styles.cameraTitle}>Face Capture</Text>
+        <Text style={styles.cameraSubtitle}>Position your face inside the circle</Text>
+      </View>
 
-        <View style={styles.cameraWrapper}>
-          {isCaptured ? (
-            <View style={styles.capturedContainer}>
-              <View style={styles.dummyAvatar}>
-                <View style={styles.dummyHead} />
-                <View style={styles.dummyBody} />
-              </View>
-              <Text style={styles.capturedText}>Photo Captured</Text>
-            </View>
-          ) : (
-            <View style={styles.viewfinderContainer}>
-              <View style={[styles.corner, styles.topLeft]} />
-              <View style={[styles.corner, styles.topRight]} />
-              <View style={[styles.corner, styles.bottomLeft]} />
-              <View style={[styles.corner, styles.bottomRight]} />
-
-              <Text style={styles.viewfinderText}>Camera Feed Active</Text>
-              <Text style={styles.viewfinderSubtext}>(Simulated)</Text>
-            </View>
-          )}
+      <View style={styles.cameraPreview}>
+        {/* Dark Preview Background to emulate inactive camera lens */}
+        <View style={styles.darkPreviewBackground}>
+          {/* Circular Face Guide Overlay */}
+          <View style={styles.faceGuide} />
         </View>
       </View>
 
-      <View style={styles.footer}>
-        {isCaptured ? (
-          <View style={styles.buttonRow}>
-            <Button
-              title="Retake"
-              variant="outline"
-              onPress={handleRetake}
-              style={styles.halfButton}
-            />
-            <Button
-              title="Use Photo"
-              onPress={handleUsePhoto}
-              style={styles.halfButton}
-            />
-          </View>
-        ) : (
-          <Button
-            title="Capture Photo"
-            onPress={handleCapture}
-            style={styles.fullButton}
-          />
-        )}
+      <View style={styles.cameraFooter}>
+        <Pressable 
+          style={({ pressed }) => [
+            styles.shutterButton,
+            pressed && styles.shutterButtonPressed
+          ]}
+          onPress={handleCapture}
+        >
+          <View style={styles.shutterInner} />
+        </Pressable>
       </View>
-    </Screen>
+
+      {/* Camera Flash Overlay */}
+      <Animated.View 
+        style={[styles.flashOverlay, { opacity: flashAnim }]} 
+        pointerEvents="none" 
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "space-between" },
-  content: { flex: 1 },
-  header: { marginBottom: spacing.xl, marginTop: spacing.md },
-  cameraWrapper: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: spacing.xl,
+  // Preview State Styles
+  container: { 
+    flex: 1, 
+    justifyContent: 'space-between' 
   },
-  viewfinderContainer: {
-    width: "100%",
+  content: { 
+    flex: 1 
+  },
+  header: { 
+    marginBottom: spacing.xl, 
+    marginTop: spacing.md 
+  },
+  previewCard: {
+    padding: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  capturedPlaceholder: {
+    width: '100%',
     aspectRatio: 3 / 4,
-    backgroundColor: "#1C1C1E",
-    borderRadius: radius.md,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-    overflow: "hidden",
-  },
-  corner: {
-    position: "absolute",
-    width: 40,
-    height: 40,
-    borderColor: colors.white,
-  },
-  topLeft: {
-    top: spacing.lg,
-    left: spacing.lg,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-  },
-  topRight: {
-    top: spacing.lg,
-    right: spacing.lg,
-    borderTopWidth: 3,
-    borderRightWidth: 3,
-  },
-  bottomLeft: {
-    bottom: spacing.lg,
-    left: spacing.lg,
-    borderBottomWidth: 3,
-    borderLeftWidth: 3,
-  },
-  bottomRight: {
-    bottom: spacing.lg,
-    right: spacing.lg,
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-  },
-  viewfinderText: {
-    color: colors.white,
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.medium,
-  },
-  viewfinderSubtext: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSize.sm,
-    marginTop: spacing.xs,
-  },
-  capturedContainer: {
-    width: "100%",
-    aspectRatio: 3 / 4,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
-  dummyAvatar: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.md,
+  capturedIcon: {
+    fontSize: 80,
+    opacity: 0.5,
   },
-  dummyHead: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.border,
+  footer: { 
+    paddingVertical: spacing.md, 
+    marginTop: spacing.md 
+  },
+  fullButton: { 
+    width: '100%' 
+  },
+  secondaryButton: { 
+    marginTop: spacing.md 
+  },
+
+  // Camera State Styles
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'space-between',
+  },
+  cameraHeader: {
+    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+  },
+  cameraTitle: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: '#FFF',
     marginBottom: spacing.xs,
   },
-  dummyBody: {
-    width: 140,
-    height: 100,
-    borderTopLeftRadius: 70,
-    borderTopRightRadius: 70,
-    backgroundColor: colors.border,
+  cameraSubtitle: {
+    fontSize: typography.fontSize.sm,
+    color: 'rgba(255,255,255,0.7)',
   },
-  capturedText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.medium,
-    marginTop: spacing.md,
+  cameraPreview: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
   },
-  footer: { paddingVertical: spacing.md },
-  buttonRow: { flexDirection: "row", gap: spacing.md },
-  halfButton: { flex: 1 },
-  fullButton: { width: "100%" },
+  darkPreviewBackground: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#111',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  faceGuide: {
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderStyle: 'dashed',
+  },
+  cameraFooter: {
+    paddingBottom: 60,
+    paddingTop: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shutterButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 4,
+    borderColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shutterButtonPressed: {
+    opacity: 0.7,
+    transform: [{ scale: 0.95 }],
+  },
+  shutterInner: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#FFF',
+  },
+  flashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#FFF',
+    zIndex: 100,
+  }
 });
