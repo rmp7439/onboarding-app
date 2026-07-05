@@ -155,8 +155,7 @@ export default function AadhaarUploadScreen() {
         showsVerticalScrollIndicator={false}
       >
         <SectionTitle 
-          title="Upload Document" 
-          subtitle="Upload both sides of the document for automatic information extraction." 
+          title="Upload Document"  
           style={styles.header} 
         />
 
@@ -176,17 +175,6 @@ export default function AadhaarUploadScreen() {
           onReplace={() => openPicker(() => handlePickImage('back', 'camera'), () => handlePickImage('back', 'gallery'))} 
           onRemove={() => setBackImage(null)} 
         />
-
-        <Card style={styles.infoCard}>
-          <Text style={styles.infoTitle}>✓ OCR will automatically extract:</Text>
-          <View style={styles.bulletPoints}>
-            <Text style={styles.bulletText}>• Full Name</Text>
-            <Text style={styles.bulletText}>• Date of Birth</Text>
-            <Text style={styles.bulletText}>• Gender</Text>
-            <Text style={styles.bulletText}>• Address</Text>
-            <Text style={styles.bulletText}>• Document Number</Text>
-          </View>
-        </Card>
       </ScrollView>
 
       <View style={styles.footer}>

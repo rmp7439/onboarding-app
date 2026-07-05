@@ -1,142 +1,139 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, Image, Alert } from "react-native";
-import { useRouter } from "expo-router";
-import { Screen, Card, SectionTitle, Button } from "../../../src/components";
-import { colors, spacing, typography, radius } from "../../../src/theme";
-import { useOnboarding } from "../../../src/context/OnboardingContext";
-import { scannerService } from "../../../src/services/scanner/ScannerService";
-import { DocumentItem } from "../../../src/types/Document";
-import { DOCUMENT_TYPES } from "../../../src/constants/App";
-import { useImagePickerAction } from "../../../src/hooks/useImagePickerAction";
+import React, { useState } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  Image, 
+  Alert,
+  ScrollView,
+  Platform
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Screen, Card, SectionTitle, Button } from '../../../src/components';
+import { colors, spacing, typography, radius } from '../../../src/theme';
+import { useOnboarding } from '../../../src/context/OnboardingContext';
+import { scannerService } from '../../../src/services/scanner/ScannerService';
+import { DocumentItem } from '../../../src/types/Document';
+import { useImagePickerAction } from '../../../src/hooks/useImagePickerAction';
 
-const INITIAL_DOCUMENTS: DocumentItem[] = DOCUMENT_TYPES.map((doc) => ({
-  ...doc,
-  uri: null,
-  filename: null,
-}));
+const INITIAL_DOCUMENTS: DocumentItem[] = [
+  { id: 'pan', title: 'PAN Card', uri: null, filename: null },
+  { id: 'driving', title: 'Driving Licence', uri: null, filename: null },
+];
 
 export default function DocumentsScreen() {
   const router = useRouter();
   const { updateData } = useOnboarding();
   const { openPicker, PickerComponent } = useImagePickerAction();
   const [documents, setDocuments] = useState<DocumentItem[]>(INITIAL_DOCUMENTS);
-
-  const handlePickImage = async (id: string, source: "gallery" | "camera") => {
+  
+  const handlePickImage = async (id: string, source: 'gallery' | 'camera') => {
     try {
-      const result =
-        source === "gallery"
-          ? await scannerService.pickFromGallery()
-          : await scannerService.captureFromCamera();
+      const result = source === 'gallery' 
+        ? await scannerService.pickFromGallery() 
+        : await scannerService.captureFromCamera();
+
       if (result) {
-        setDocuments((prev) =>
-          prev.map((doc) =>
-            doc.id === id
-              ? { ...doc, uri: result.uri, filename: result.filename }
-              : doc,
-          ),
+        setDocuments((prev) => 
+          prev.map((doc) => 
+            doc.id === id ? { ...doc, uri: result.uri, filename: result.filename } : doc
+          )
         );
       }
     } catch (error: any) {
-      Alert.alert(
-        "Error",
-        error.message || "Something went wrong while attaching the document.",
-      );
+      Alert.alert('Error', error.message || 'Something went wrong while attaching the document.');
     }
   };
 
   const handleRemove = (id: string) => {
     setDocuments((prev) =>
-      prev.map((doc) =>
-        doc.id === id ? { ...doc, uri: null, filename: null } : doc,
-      ),
+      prev.map((doc) => (doc.id === id ? { ...doc, uri: null, filename: null } : doc))
     );
   };
 
   const handleContinue = () => {
-    const uploadedDocs = documents
-      .filter((doc) => doc.uri !== null)
-      .map((doc) => doc.title);
+    const uploadedDocs = documents.filter((doc) => doc.uri !== null).map((doc) => doc.title);
     updateData({ uploadedDocuments: uploadedDocs });
-    router.push("/(onboarding)/new-guard/review");
+    router.push('/(onboarding)/new-guard/review');
   };
 
   return (
-    <Screen style={styles.container}>
-      <View style={styles.content}>
+    <Screen scrollable={false} style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <SectionTitle
           title="Supporting Documents"
-          subtitle="Upload any available supporting documents."
           style={styles.header}
         />
 
-        {documents.map((doc) => (
-          <Card key={doc.id} style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.docTitle}>{doc.title}</Text>
-              {doc.uri && (
-                <View style={styles.uploadedBadge}>
-                  <Text style={styles.uploadedBadgeText}>✓ Attached</Text>
+        <Card style={styles.listCard}>
+          {documents.map((doc, index) => {
+            const isLast = index === documents.length - 1;
+            
+            return (
+              <View key={doc.id} style={[styles.rowContainer, !isLast && styles.rowBorder]}>
+                <View style={styles.rowHeader}>
+                  <Text style={styles.docTitle}>{doc.title}</Text>
+                  {doc.uri ? (
+                    <View style={styles.uploadedBadge}>
+                      <Text style={styles.uploadedBadgeText}>✓ Attached</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.optionalText}>Optional</Text>
+                  )}
                 </View>
-              )}
-            </View>
 
-            {!doc.uri ? (
-              <Button
-                title="Upload Document"
-                variant="outline"
-                onPress={() =>
-                  openPicker(
-                    () => handlePickImage(doc.id, "camera"),
-                    () => handlePickImage(doc.id, "gallery"),
-                  )
-                }
-                style={styles.actionButton}
-              />
-            ) : (
-              <View style={styles.attachmentContainer}>
-                <View style={styles.fileInfoRow}>
-                  <Image
-                    source={{ uri: doc.uri }}
-                    style={styles.thumbnail}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.fileDetails}>
-                    <Text
-                      style={styles.filenameText}
-                      numberOfLines={1}
-                      ellipsizeMode="middle"
-                    >
-                      {doc.filename}
-                    </Text>
-                    <Text style={styles.fileStatusText}>Ready for upload</Text>
+                {!doc.uri ? (
+                  <View style={styles.actionContainer}>
+                    <Button
+                      title="Upload"
+                      variant="outline"
+                      onPress={() => openPicker(
+                        () => handlePickImage(doc.id, 'camera'), 
+                        () => handlePickImage(doc.id, 'gallery')
+                      )}
+                      style={styles.actionButton}
+                    />
                   </View>
-                </View>
+                ) : (
+                  <View style={styles.attachmentContainer}>
+                    <View style={styles.fileInfoRow}>
+                      <Image source={{ uri: doc.uri }} style={styles.thumbnail} resizeMode="cover" />
+                      <View style={styles.fileDetails}>
+                        <Text style={styles.filenameText} numberOfLines={1} ellipsizeMode="middle">
+                          {doc.filename}
+                        </Text>
+                      </View>
+                    </View>
 
-                <View style={styles.cardActionRow}>
-                  <Button
-                    title="Replace"
-                    variant="outline"
-                    onPress={() =>
-                      openPicker(
-                        () => handlePickImage(doc.id, "camera"),
-                        () => handlePickImage(doc.id, "gallery"),
-                      )
-                    }
-                    style={styles.halfBtn}
-                  />
-                  <View style={styles.actionSpacer} />
-                  <Button
-                    title="Remove"
-                    variant="outline"
-                    onPress={() => handleRemove(doc.id)}
-                    style={styles.halfBtn}
-                  />
-                </View>
+                    <View style={styles.cardActionRow}>
+                      <Button 
+                        title="Replace" 
+                        variant="outline" 
+                        onPress={() => openPicker(
+                          () => handlePickImage(doc.id, 'camera'), 
+                          () => handlePickImage(doc.id, 'gallery')
+                        )} 
+                        style={styles.halfBtn} 
+                      />
+                      <View style={styles.actionSpacer} />
+                      <Button 
+                        title="Remove" 
+                        variant="outline" 
+                        onPress={() => handleRemove(doc.id)} 
+                        style={styles.halfBtn} 
+                      />
+                    </View>
+                  </View>
+                )}
               </View>
-            )}
-          </Card>
-        ))}
-      </View>
+            );
+          })}
+        </Card>
+      </ScrollView>
 
       <View style={styles.footer}>
         <Button
@@ -152,64 +149,132 @@ export default function DocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "space-between" },
-  content: { flex: 1 },
-  header: { marginBottom: spacing.xl, marginTop: spacing.md },
-  card: { marginBottom: spacing.md },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.md,
+  container: { 
+    flex: 1,
   },
-  docTitle: {
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semibold,
+  scrollView: { 
+    flex: 1,
+  },
+  scrollContent: { 
+    flexGrow: 1, 
+    paddingTop: spacing.md,
+    paddingBottom: spacing['2xl'], 
+  },
+  header: { 
+    marginBottom: spacing.lg, 
+  },
+  
+  // Compact List Card
+  listCard: { 
+    padding: 0, 
+    borderWidth: 1, 
+    borderColor: 'rgba(0,0,0,0.05)', 
+    shadowColor: colors.text, 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.03, 
+    shadowRadius: 8, 
+    elevation: 1,
+    overflow: 'hidden',
+  },
+  rowContainer: {
+    padding: spacing.lg,
+  },
+  rowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  rowHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: spacing.sm,
+  },
+  docTitle: { 
+    fontSize: typography.fontSize.md, 
+    fontWeight: typography.fontWeight.semibold, 
     color: colors.text,
+  },
+  optionalText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    fontWeight: typography.fontWeight.medium,
   },
   uploadedBadge: {
-    backgroundColor: "#E8F8EE",
+    backgroundColor: '#F0FDF4',
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-    borderRadius: radius.full,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
   },
   uploadedBadgeText: {
-    color: colors.success,
-    fontSize: typography.fontSize.xs,
+    color: '#166534',
+    fontSize: 10,
     fontWeight: typography.fontWeight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  actionButton: { height: 44 },
-  attachmentContainer: { marginTop: spacing.xs },
-  fileInfoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.background,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
+  
+  // Action Buttons
+  actionContainer: {
+    marginTop: spacing.xs,
+  },
+  actionButton: { 
+    height: 44,
+  },
+  
+  // Attachments
+  attachmentContainer: { 
+    marginTop: spacing.xs,
+  },
+  fileInfoRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: colors.background, 
+    padding: spacing.sm, 
+    borderRadius: radius.md, 
+    marginBottom: spacing.md, 
+    borderWidth: 1, 
     borderColor: colors.border,
   },
-  thumbnail: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.sm,
+  thumbnail: { 
+    width: 40, 
+    height: 40, 
+    borderRadius: radius.sm, 
     backgroundColor: colors.surface,
   },
-  fileDetails: { flex: 1, marginLeft: spacing.md },
-  filenameText: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
+  fileDetails: { 
+    flex: 1, 
+    marginLeft: spacing.md,
+  },
+  filenameText: { 
+    fontSize: typography.fontSize.sm, 
+    fontWeight: typography.fontWeight.medium, 
     color: colors.text,
-    marginBottom: 2,
   },
-  fileStatusText: {
-    fontSize: typography.fontSize.xs,
-    color: colors.textSecondary,
+
+  // Row Actions (Replace/Remove)
+  cardActionRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
   },
-  cardActionRow: { flexDirection: "row", justifyContent: "space-between" },
-  halfBtn: { flex: 1, height: 40 },
-  actionSpacer: { width: spacing.sm },
-  footer: { paddingVertical: spacing.md, marginTop: spacing.md },
-  fullButton: { width: "100%" },
+  halfBtn: { 
+    flex: 1, 
+    height: 40,
+  },
+  actionSpacer: { 
+    width: spacing.md,
+  },
+
+  // Fixed Footer
+  footer: { 
+    paddingTop: spacing.md, 
+    paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg, 
+    backgroundColor: colors.background, 
+    borderTopWidth: 1, 
+    borderTopColor: colors.border,
+  },
+  fullButton: { 
+    width: '100%',
+  },
 });

@@ -112,7 +112,6 @@ export default function CapturePhotoScreen() {
         <View style={styles.content}>
           <SectionTitle
             title="Review Photo"
-            subtitle="Ensure your face is clearly visible, well-lit, and directly facing the camera."
             style={styles.header}
           />
           <Card style={styles.previewCard}>
