@@ -38,8 +38,8 @@ export default function HomeScreen() {
   });
 
   const handleRegisterNewEmployee = () => {
-    // TODO: Navigate to new manual entry flow once implemented in V2
-    console.log("Navigate to Manual Onboarding Entry");
+    // Bypasses the old OCR routes entirely
+    router.push('../(onboarding)/new-guard/employee-details');
   };
 
   const handleLogout = () => {

@@ -1,18 +1,52 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export interface MediaData {
-  selfieUri?: string | null;
-  uploadedDocuments?: string[];
+export interface EmergencyContact {
+  name: string;
+  relation: string;
+  mobile: string;
 }
 
-export interface OnboardingData extends MediaData {
-  fullName?: string;
-  dateOfBirth?: string;
-  gender?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  pinCode?: string;
+export interface OnboardingData {
+  employment: {
+    joiningDate: string;
+    unit: string;
+  };
+  personal: {
+    firstName: string;
+    surname: string;
+    fatherName: string;
+    husbandName: string;
+    gender: string;
+    dob: string;
+    mobile: string;
+    bloodGroup: string;
+  };
+  identity: {
+    aadhaar: string;
+    pan: string;
+    uan: string;
+    esic: string;
+    pf: string;
+  };
+  address: {
+    permanent: string;
+    current: string;
+    city: string;
+    state: string;
+    pinCode: string;
+  };
+  bank: {
+    bankName: string;
+    accountNumber: string;
+    ifsc: string;
+    branch: string;
+    micr: string;
+  };
+  emergencyContacts: [EmergencyContact, EmergencyContact];
+  
+  // Kept at root level to avoid breaking existing CapturePhoto and Documents screens
+  selfieUri: string | null;
+  uploadedDocuments: string[];
 }
 
 interface OnboardingContextType {
@@ -22,13 +56,15 @@ interface OnboardingContextType {
 }
 
 const INITIAL_DATA: OnboardingData = {
-  fullName: '',
-  dateOfBirth: '',
-  gender: '',
-  address: '',
-  city: '',
-  state: '',
-  pinCode: '',
+  employment: { joiningDate: '', unit: '' },
+  personal: { firstName: '', surname: '', fatherName: '', husbandName: '', gender: '', dob: '', mobile: '', bloodGroup: '' },
+  identity: { aadhaar: '', pan: '', uan: '', esic: '', pf: '' },
+  address: { permanent: '', current: '', city: '', state: '', pinCode: '' },
+  bank: { bankName: '', accountNumber: '', ifsc: '', branch: '', micr: '' },
+  emergencyContacts: [
+    { name: '', relation: '', mobile: '' },
+    { name: '', relation: '', mobile: '' }
+  ],
   selfieUri: null,
   uploadedDocuments: [],
 };
