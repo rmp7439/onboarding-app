@@ -26,7 +26,6 @@ export interface OnboardingData {
     pan: string;
     uan: string;
     esic: string;
-    pf: string;
   };
   address: {
     permanent: string;
@@ -42,7 +41,7 @@ export interface OnboardingData {
     branch: string;
     micr: string;
   };
-  emergencyContacts: [EmergencyContact, EmergencyContact];
+  emergencyContact: [EmergencyContact];
   
   selfieUri: string | null;
   uploadedDocuments: string[];
@@ -57,12 +56,11 @@ interface OnboardingContextType {
 const INITIAL_DATA: OnboardingData = {
   employment: { joiningDate: '', unit: '' },
   personal: { firstName: '', surname: '', fatherName: '', husbandName: '', gender: '', dob: '', mobile: '', bloodGroup: '' },
-  identity: { aadhaar: '', pan: '', uan: '', esic: '', pf: '' },
+  identity: { aadhaar: '', pan: '', uan: '', esic: ''},
   address: { permanent: '', current: '', city: '', state: '', pinCode: '' },
   bank: { bankName: '', accountNumber: '', ifsc: '', branch: '', micr: '' },
-  emergencyContacts: [
+  emergencyContact: [
     { name: '', relation: '', mobile: '' },
-    { name: '', relation: '', mobile: '' }
   ],
   selfieUri: null,
   uploadedDocuments: [],

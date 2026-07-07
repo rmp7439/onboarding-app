@@ -16,7 +16,6 @@ export interface EmployeeFormData {
   panNumber: string;
   uanNumber: string;
   esicNumber: string;
-  pfNumber: string;
   // Address
   permanentAddress: string;
   currentAddress: string;
@@ -33,8 +32,4 @@ export interface EmployeeFormData {
   em1Name: string;
   em1Relation: string;
   em1Mobile: string;
-  // Emergency Contact 2
-  em2Name: string;
-  em2Relation: string;
-  em2Mobile: string;
 }

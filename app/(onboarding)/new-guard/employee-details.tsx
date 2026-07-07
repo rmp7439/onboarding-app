@@ -81,10 +81,7 @@ export default function EmployeeDetailsScreen() {
         return (
           data.em1Name.length > 0 &&
           data.em1Relation.length > 0 &&
-          data.em1Mobile.length === 10 &&
-          data.em2Name.length > 0 &&
-          data.em2Relation.length > 0 &&
-          data.em2Mobile.length === 10
+          data.em1Mobile.length === 10
         );
       default:
         return false;
@@ -144,7 +141,6 @@ export default function EmployeeDetailsScreen() {
         pan: formData.panNumber,
         uan: formData.uanNumber,
         esic: formData.esicNumber,
-        pf: formData.pfNumber,
       },
       address: {
         permanent: formData.permanentAddress,
@@ -160,16 +156,11 @@ export default function EmployeeDetailsScreen() {
         branch: formData.branch,
         micr: formData.micrCode,
       },
-      emergencyContacts: [
+      emergencyContact: [
         {
           name: formData.em1Name,
           relation: formData.em1Relation,
           mobile: formData.em1Mobile,
-        },
-        {
-          name: formData.em2Name,
-          relation: formData.em2Relation,
-          mobile: formData.em2Mobile,
         },
       ],
     });
