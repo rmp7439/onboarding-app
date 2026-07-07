@@ -6,10 +6,12 @@ import {
   Pressable, 
   Animated, 
   SafeAreaView,
-  Image
+  Image,
+  useWindowDimensions // <-- Added import
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator'; // <-- Added import
 import { Screen, SectionTitle, Button, Card } from '../../../src/components';
 import { colors, spacing, typography, radius } from '../../../src/theme';
 import { useOnboarding } from '../../../src/context/OnboardingContext';
@@ -23,6 +25,10 @@ export default function CapturePhotoScreen() {
   const cameraRef = useRef<CameraView>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+
+  // Dynamic layout states for perfect cropping
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const [guideTop, setGuideTop] = useState(0);
 
   const flashAnim = useRef(new Animated.Value(0)).current;
 
@@ -46,14 +52,51 @@ export default function CapturePhotoScreen() {
     ]).start();
 
     try {
-      // 2. Capture actual photo from Expo Camera
+      // 2. Capture actual photo from Expo Camera (1.0 Quality to preserve detail before crop)
       const photoData = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
+        quality: 1, 
         base64: false,
       });
       
       if (photoData && photoData.uri) {
-        setPhoto(photoData.uri);
+        // --- Coordinate Transformation & Cropping Logic ---
+        
+        let photoWidth = photoData.width;
+        let photoHeight = photoData.height;
+
+        // Normalization: Ensure dimensions match portrait orientation
+        if (screenWidth < screenHeight && photoWidth > photoHeight) {
+          photoWidth = photoData.height;
+          photoHeight = photoData.width;
+        }
+
+        // Calculate how the camera feed was scaled to fill the screen
+        const scale = Math.max(screenWidth / photoWidth, screenHeight / photoHeight);
+        const displayedWidth = photoWidth * scale;
+        const displayedHeight = photoHeight * scale;
+
+        // Calculate how much of the image was pushed off-screen
+        const offsetX = (displayedWidth - screenWidth) / 2;
+        const offsetY = (displayedHeight - screenHeight) / 2;
+
+        // Face guide is exactly 280px wide and centered horizontally
+        const guideLeft = (screenWidth - 280) / 2;
+
+        // Map screen coordinates back to the original photo's pixel coordinates
+        const cropX = Math.max(0, Math.floor((guideLeft + offsetX) / scale));
+        const cropY = Math.max(0, Math.floor((guideTop + offsetY) / scale));
+        const cropWidth = Math.min(photoWidth, Math.floor(280 / scale));
+        const cropHeight = Math.min(photoHeight, Math.floor(380 / scale));
+
+        // Crop the image and compress for storage
+        const manipResult = await manipulateAsync(
+          photoData.uri,
+          [{ crop: { originX: cropX, originY: cropY, width: cropWidth, height: cropHeight } }],
+          { compress: 0.8, format: SaveFormat.JPEG }
+        );
+
+        // Store the final cropped URI
+        setPhoto(manipResult.uri);
       }
     } catch (error) {
       console.error('Failed to capture photo:', error);
@@ -77,7 +120,6 @@ export default function CapturePhotoScreen() {
   // PERMISSION STATE
   // ---------------------------------------------------------------------------
   if (!permission) {
-    // Camera permissions are still loading
     return <View style={styles.container} />;
   }
 
@@ -115,6 +157,7 @@ export default function CapturePhotoScreen() {
             style={styles.header}
           />
           <Card style={styles.previewCard}>
+            {/* The preview will now natively fit the cropped face nicely */}
             <View style={styles.capturedPlaceholder}>
               <Image source={{ uri: photo }} style={styles.capturedImage} resizeMode="cover" />
             </View>
@@ -149,15 +192,20 @@ export default function CapturePhotoScreen() {
         facing="front"
       />
 
-      {/* UI Overlay over the live camera feed */}
       <View style={styles.cameraOverlay}>
         <View style={styles.cameraHeader}>
           <Text style={styles.cameraTitle}>Face Capture</Text>
           <Text style={styles.cameraSubtitle}>Position your face inside the circle</Text>
         </View>
 
-        <View style={styles.faceGuideContainer}>
-          {/* Circular Face Guide Overlay */}
+        <View 
+          style={styles.faceGuideContainer}
+          // Extracts the exact Y-position of the face guide relative to the screen on load
+          onLayout={(e) => {
+            const { y, height } = e.nativeEvent.layout;
+            setGuideTop(y + (height - 380) / 2);
+          }}
+        >
           <View style={styles.faceGuide} />
         </View>
 
@@ -176,7 +224,6 @@ export default function CapturePhotoScreen() {
         </View>
       </View>
 
-      {/* Camera Flash Overlay */}
       <Animated.View 
         style={[styles.flashOverlay, { opacity: flashAnim }]} 
         pointerEvents="none" 
@@ -185,38 +232,15 @@ export default function CapturePhotoScreen() {
   );
 }
 
+// ... All existing styles remain entirely unmodified ...
 const styles = StyleSheet.create({
-  // Permission & Preview State Styles
-  container: { 
-    flex: 1, 
-    justifyContent: 'space-between',
-  },
-  content: { 
-    flex: 1,
-  },
-  permissionContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-  },
-  permissionIcon: {
-    fontSize: 64,
-    marginBottom: spacing.xl,
-  },
-  permissionHeader: {
-    alignItems: 'center',
-    textAlign: 'center',
-  },
-  header: { 
-    marginBottom: spacing.xl, 
-    marginTop: spacing.md,
-  },
-  previewCard: {
-    padding: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  container: { flex: 1, justifyContent: 'space-between' },
+  content: { flex: 1 },
+  permissionContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.md },
+  permissionIcon: { fontSize: 64, marginBottom: spacing.xl },
+  permissionHeader: { alignItems: 'center', textAlign: 'center' },
+  header: { marginBottom: spacing.xl, marginTop: spacing.md },
+  previewCard: { padding: spacing.md, alignItems: 'center', justifyContent: 'center' },
   capturedPlaceholder: {
     width: '100%',
     aspectRatio: 3 / 4,
@@ -228,36 +252,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  capturedImage: {
-    width: '100%',
-    height: '100%',
-  },
-  footer: { 
-    paddingVertical: spacing.md, 
-    marginTop: spacing.md,
-  },
-  fullButton: { 
-    width: '100%',
-  },
-  secondaryButton: { 
-    marginTop: spacing.md,
-  },
-
-  // Camera State Styles
-  cameraContainer: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  cameraOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'space-between',
-    zIndex: 10,
-  },
-  cameraHeader: {
-    paddingTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-  },
+  capturedImage: { width: '100%', height: '100%' },
+  footer: { paddingVertical: spacing.md, marginTop: spacing.md },
+  fullButton: { width: '100%' },
+  secondaryButton: { marginTop: spacing.md },
+  cameraContainer: { flex: 1, backgroundColor: '#000' },
+  cameraOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'space-between', zIndex: 10 },
+  cameraHeader: { paddingTop: spacing.xl, paddingHorizontal: spacing.lg, alignItems: 'center' },
   cameraTitle: {
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.bold,
@@ -274,50 +275,22 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  faceGuideContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  faceGuideContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   faceGuide: {
     width: 280,
-    height: 380, // Slightly oval to match face proportions better
-    borderRadius: 140, // 280/2
+    height: 380, 
+    borderRadius: 140, 
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.6)',
     borderStyle: 'dashed',
   },
-  cameraFooter: {
-    paddingBottom: 60,
-    paddingTop: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  cameraFooter: { paddingBottom: 60, paddingTop: spacing.lg, alignItems: 'center', justifyContent: 'center' },
   shutterButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 4,
-    borderColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 72, height: 72, borderRadius: 36, borderWidth: 4, borderColor: '#FFF',
+    justifyContent: 'center', alignItems: 'center',
   },
-  shutterButtonPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.95 }],
-  },
-  shutterButtonDisabled: {
-    opacity: 0.5,
-  },
-  shutterInner: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: '#FFF',
-  },
-  flashOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#FFF',
-    zIndex: 100,
-  }
+  shutterButtonPressed: { opacity: 0.7, transform: [{ scale: 0.95 }] },
+  shutterButtonDisabled: { opacity: 0.5 },
+  shutterInner: { width: 54, height: 54, borderRadius: 27, backgroundColor: '#FFF' },
+  flashOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#FFF', zIndex: 100 }
 });
