@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, memo } from 'react';
+import React, { useRef, useState, useEffect, memo } from 'react';
 import { 
   View, 
   Text, 
@@ -9,11 +9,12 @@ import {
 } from 'react-native';
 import { colors, spacing, radius, typography } from '../../theme';
 
-export type SegmentType = 'numeric' | 'alpha';
+export type SegmentType = 'numeric' | 'alpha' | 'fixed';
 
 export interface SegmentConfig {
   length: number;
   type: SegmentType;
+  value?: string; // Used specifically for 'fixed' type
 }
 
 export interface SegmentedInputProps {
@@ -35,46 +36,129 @@ export const SegmentedInput = memo(function SegmentedInput({
   disabled = false,
   error,
 }: SegmentedInputProps) {
-  // Array of refs to manage focus switching
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
-  // Split the parent's single string into chunks matching the segment config
-  const chunks = useMemo(() => {
+  // Local state isolates the chunks for smooth typing, preventing premature slicing bugs
+  const [chunks, setChunks] = useState<string[]>(() => {
     let currentIdx = 0;
     return segments.map((seg) => {
+      if (seg.type === 'fixed' && seg.value) return seg.value;
       const chunk = (value || '').slice(currentIdx, currentIdx + seg.length);
       currentIdx += seg.length;
       return chunk;
     });
+  });
+
+  // Sync from parent ONLY if the form is reset or initially populated with a full value
+  useEffect(() => {
+    if (!value) {
+      setChunks(segments.map(seg => (seg.type === 'fixed' && seg.value) ? seg.value : ''));
+    } else {
+      const expectedLength = segments.reduce((acc, s) => acc + s.length, 0);
+      if (value.length === expectedLength) {
+        setChunks((prev) => {
+          if (prev.join('') === value) return prev; // Bail out if perfectly in sync
+          let currentIdx = 0;
+          return segments.map((seg) => {
+            if (seg.type === 'fixed' && seg.value) {
+              currentIdx += seg.length;
+              return seg.value;
+            }
+            const chunk = value.slice(currentIdx, currentIdx + seg.length);
+            currentIdx += seg.length;
+            return chunk;
+          });
+        });
+      }
+    }
   }, [value, segments]);
 
   const handleChange = (text: string, index: number) => {
     const seg = segments[index];
-    let sanitized = text;
+    if (seg.type === 'fixed') return;
 
-    // Strict internal validation
-    if (seg.type === 'numeric') {
-      sanitized = sanitized.replace(/\D/g, ''); // Numbers only
-    } else if (seg.type === 'alpha') {
-      sanitized = sanitized.replace(/[^a-zA-Z]/g, '').toUpperCase(); // Letters only, auto-uppercase
+    // --- PASTE HANDLER ---
+    if (text.length > seg.length) {
+      let pasted = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      let reconstructed = '';
+      let pIdx = 0;
+      const newChunks = [...chunks];
+      
+      for (let i = 0; i < segments.length; i++) {
+        const s = segments[i];
+        if (s.type === 'fixed' && s.value) {
+          reconstructed += s.value;
+          newChunks[i] = s.value;
+          if (pasted[pIdx] === s.value) pIdx++; 
+        } else {
+          let chunk = pasted.slice(pIdx, pIdx + s.length);
+          if (s.type === 'numeric') chunk = chunk.replace(/\D/g, '');
+          if (s.type === 'alpha') chunk = chunk.replace(/[^A-Z]/g, '');
+          reconstructed += chunk;
+          newChunks[i] = chunk;
+          pIdx += s.length; 
+        }
+      }
+      
+      setChunks(newChunks);
+      onChange(reconstructed);
+      
+      let lastFilled = -1;
+      for (let i = newChunks.length - 1; i >= 0; i--) {
+        if (newChunks[i].length > 0) { lastFilled = i; break; }
+      }
+      if (lastFilled >= 0 && lastFilled < segments.length - 1) {
+        inputRefs.current[lastFilled + 1]?.focus();
+      } else if (lastFilled === segments.length - 1) {
+        inputRefs.current[lastFilled]?.focus();
+      }
+      return;
     }
 
-    // Build the new combined value for the parent
+    // --- NORMAL TYPING HANDLER ---
+    let sanitized = text;
+    if (seg.type === 'numeric') {
+      sanitized = sanitized.replace(/\D/g, ''); 
+    } else if (seg.type === 'alpha') {
+      // Strictly strips digits/symbols and forces uppercase
+      sanitized = sanitized.replace(/[^a-zA-Z]/g, '').toUpperCase(); 
+    }
+
     const newChunks = [...chunks];
     newChunks[index] = sanitized;
-    const newValue = newChunks.join('');
-    onChange(newValue);
+    
+    // Auto-fill fixed segments to ensure they are never missing from state
+    segments.forEach((s, i) => {
+      if (s.type === 'fixed' && s.value) {
+        newChunks[i] = s.value;
+      }
+    });
 
-    // Auto-advance focus if this chunk is completely filled
+    setChunks(newChunks);
+    onChange(newChunks.join(''));
+
+    // Auto-advance focus seamlessly (skips over fixed segments effortlessly)
     if (sanitized.length === seg.length && index < segments.length - 1) {
-      inputRefs.current[index + 1]?.focus();
+      let nextIdx = index + 1;
+      while (nextIdx < segments.length && segments[nextIdx].type === 'fixed') {
+        nextIdx++;
+      }
+      if (nextIdx < segments.length) {
+        inputRefs.current[nextIdx]?.focus();
+      }
     }
   };
 
   const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
-    // Natural Backspace navigation: Move to previous box if current is empty
+    // Natural Backspace navigation: Move backward skipping fixed segments
     if (e.nativeEvent.key === 'Backspace' && chunks[index] === '' && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+      let prevIdx = index - 1;
+      while (prevIdx >= 0 && segments[prevIdx].type === 'fixed') {
+        prevIdx--;
+      }
+      if (prevIdx >= 0) {
+        inputRefs.current[prevIdx]?.focus();
+      }
     }
   };
 
@@ -92,9 +176,9 @@ export const SegmentedInput = memo(function SegmentedInput({
             ref={(el) => {inputRefs.current[index] = el}}
             style={[
               styles.inputBox,
-              { flex: seg.length }, // Proportionally size the box based on max characters
+              { flex: seg.length }, 
               !!error && styles.errorInput,
-              disabled && styles.disabledInput,
+              (disabled || seg.type === 'fixed') && styles.disabledInput,
             ]}
             value={chunks[index]}
             onChangeText={(text) => handleChange(text, index)}
@@ -102,7 +186,7 @@ export const SegmentedInput = memo(function SegmentedInput({
             keyboardType={seg.type === 'numeric' ? 'number-pad' : 'default'}
             maxLength={seg.length}
             autoCapitalize={seg.type === 'alpha' ? 'characters' : 'none'}
-            editable={!disabled}
+            editable={!disabled && seg.type !== 'fixed'}
             textAlign="center"
             placeholderTextColor={colors.border}
           />
@@ -142,7 +226,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     backgroundColor: colors.surface,
     minHeight: 48,
-    minWidth: 36, // Ensures the 1-letter PAN box remains easily tappable
+    minWidth: 36, 
   },
   disabledInput: {
     backgroundColor: colors.background,

@@ -59,7 +59,6 @@ export default function EmployeeDetailsScreen() {
         );
       case 2:
         return (
-          // Strictly requires 12 digits for Aadhaar, 10 for PAN, 12 for UAN, and exactly 17 for ESIC
           data.aadhaarNumber.length === 12 &&
           data.panNumber.length === 10 &&
           data.uanNumber.length === 12 &&
@@ -73,7 +72,7 @@ export default function EmployeeDetailsScreen() {
           data.state.length > 0 &&
           data.pinCode.length === 6 &&
           data.bankName.length > 0 &&
-          data.accountNumber.length > 0 &&
+          data.accountNumber.length === 16 && // Updated to strictly demand 16 digits
           data.ifscCode.length === 11 &&
           data.branch.length > 0 &&
           data.micrCode.length === 9
