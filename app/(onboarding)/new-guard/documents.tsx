@@ -15,24 +15,75 @@ import { colors, spacing, typography, radius } from "../../../src/theme";
 import { useOnboarding } from "../../../src/context/OnboardingContext";
 import { DocumentItem } from "../../../src/types/Document";
 import { useImagePickerAction } from "../../../src/hooks/useImagePickerAction";
+import { api } from "../../../src/api/apiClient";
+import {
+  mapEmployeeData,
+  mapDocumentType,
+} from "../../../src/utils/dataMappers";
 
 const INITIAL_DOCUMENTS: DocumentItem[] = [
-  // Required Documents
-  { id: "aadhaar", title: "Aadhaar Card", uri: null, filename: null, required: true },
+  {
+    id: "aadhaar",
+    title: "Aadhaar Card",
+    uri: null,
+    filename: null,
+    required: true,
+  },
   { id: "pan", title: "PAN Card", uri: null, filename: null, required: true },
-  { id: "driving", title: "Driving Licence", uri: null, filename: null, required: true },
-  { id: "bank", title: "Bank Passbook / Cancelled Cheque", uri: null, filename: null, required: true },
-  { id: "education", title: "Education Proof", uri: null, filename: null, required: true },
-  { id: "voter", title: "Voter ID Card", uri: null, filename: null, required: true },
-  // Optional Documents
-  { id: "discharge", title: "Discharge Book (If Applicable)", uri: null, filename: null, required: false },
+  {
+    id: "driving",
+    title: "Driving Licence",
+    uri: null,
+    filename: null,
+    required: true,
+  },
+  {
+    id: "bank",
+    title: "Bank Passbook / Cancelled Cheque",
+    uri: null,
+    filename: null,
+    required: true,
+  },
+  {
+    id: "education",
+    title: "Education Proof",
+    uri: null,
+    filename: null,
+    required: true,
+  },
+  {
+    id: "voter",
+    title: "Voter ID Card",
+    uri: null,
+    filename: null,
+    required: true,
+  },
+  {
+    id: "discharge",
+    title: "Discharge Book (If Applicable)",
+    uri: null,
+    filename: null,
+    required: false,
+  },
 ];
 
 export default function DocumentsScreen() {
   const router = useRouter();
-  const { updateData } = useOnboarding();
+  const { data, updateData } = useOnboarding();
   const { openPicker, PickerComponent } = useImagePickerAction();
   const [documents, setDocuments] = useState<DocumentItem[]>(INITIAL_DOCUMENTS);
+
+  // Network & Progress State
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progressText, setProgressText] = useState("");
+  const [errorText, setErrorText] = useState<string | null>(null);
+
+  // Resiliency State (Tracks what succeeds so retries skip them)
+  const [registeredEmployeeId, setRegisteredEmployeeId] = useState<
+    string | null
+  >(null);
+  const [isSelfieUploaded, setIsSelfieUploaded] = useState(false);
+  const [completedDocUploads, setCompletedDocUploads] = useState<string[]>([]);
 
   const handlePickImage = async (id: string, source: "gallery" | "camera") => {
     try {
@@ -77,28 +128,82 @@ export default function DocumentsScreen() {
     );
   };
 
-  const handleContinue = () => {
-    const uploadedDocs = documents
-      .filter((doc) => doc.uri !== null)
-      .map((doc) => doc.title);
-    updateData({ uploadedDocuments: uploadedDocs });
+  const handleSubmit = async () => {
+    // Prevent duplicate submissions
+    if (isSubmitting) return;
 
-    // TODO: Navigate to the new manual review screen (Pending V2 Implementation)
-    console.log("Navigating to final review...");
-    // router.push('/(onboarding)/new-guard/review-manual');
+    setIsSubmitting(true);
+    setErrorText(null);
+
+    try {
+      let empId = registeredEmployeeId;
+
+      // 1. Submit Registration Data
+      if (!empId) {
+        setProgressText("Registering employee details...");
+        const mappedData = mapEmployeeData(data);
+        const result = await api.registerEmployee(mappedData);
+        empId = result.id;
+        setRegisteredEmployeeId(empId);
+      }
+
+      // 2. Upload Captured Selfie
+      if (!isSelfieUploaded && data.selfieUri) {
+        setProgressText("Uploading security selfie...");
+        await api.uploadSelfie(empId!, data.selfieUri);
+        setIsSelfieUploaded(true);
+      }
+
+      // 3. Sequentially Upload Required & Optional Documents
+      const docsToUpload = documents.filter((doc) => doc.uri !== null);
+      for (let i = 0; i < docsToUpload.length; i++) {
+        const doc = docsToUpload[i];
+
+        // Skip already uploaded documents on a retry event
+        if (completedDocUploads.includes(doc.id)) continue;
+
+        setProgressText(
+          `Uploading ${doc.title} (${i + 1}/${docsToUpload.length})...`,
+        );
+        const docType = mapDocumentType(doc.id);
+
+        await api.uploadDocument(empId!, docType, doc.uri!);
+
+        // Save progress explicitly so failures don't drop progress
+        setCompletedDocUploads((prev) => [...prev, doc.id]);
+      }
+
+      // 4. Finalize & Navigate
+      setProgressText("Finalizing profile...");
+      const finalDocNames = docsToUpload.map((doc) => doc.title);
+      updateData({ uploadedDocuments: finalDocNames });
+
+      router.push("/(onboarding)/new-guard/success");
+    } catch (error: any) {
+      setErrorText(
+        error.message ||
+          "An unexpected error occurred during the upload process.",
+      );
+    } finally {
+      setIsSubmitting(false);
+      setProgressText("");
+    }
   };
 
-  // Derive document sets and progress
   const requiredDocs = documents.filter((doc) => doc.required);
   const optionalDocs = documents.filter((doc) => !doc.required);
-  
+
   const totalRequiredDocs = requiredDocs.length;
-  const uploadedRequiredDocs = requiredDocs.filter((doc) => doc.uri !== null).length;
-  
+  const uploadedRequiredDocs = requiredDocs.filter(
+    (doc) => doc.uri !== null,
+  ).length;
   const isContinueEnabled = uploadedRequiredDocs === totalRequiredDocs;
 
-  // Reusable render function to prevent duplicating the card logic
-  const renderDocumentRow = (doc: DocumentItem, index: number, total: number) => {
+  const renderDocumentRow = (
+    doc: DocumentItem,
+    index: number,
+    total: number,
+  ) => {
     const isLast = index === total - 1;
     return (
       <View
@@ -113,10 +218,7 @@ export default function DocumentsScreen() {
             </View>
           ) : (
             <Text
-              style={[
-                styles.optionalText,
-                doc.required && styles.requiredText,
-              ]}
+              style={[styles.optionalText, doc.required && styles.requiredText]}
             >
               {doc.required ? "Required" : "Optional"}
             </Text>
@@ -128,6 +230,7 @@ export default function DocumentsScreen() {
             <Button
               title="Upload"
               variant="outline"
+              disabled={isSubmitting}
               onPress={() =>
                 openPicker(
                   () => handlePickImage(doc.id, "camera"),
@@ -160,6 +263,7 @@ export default function DocumentsScreen() {
               <Button
                 title="Replace"
                 variant="outline"
+                disabled={isSubmitting}
                 onPress={() =>
                   openPicker(
                     () => handlePickImage(doc.id, "camera"),
@@ -172,6 +276,7 @@ export default function DocumentsScreen() {
               <Button
                 title="Remove"
                 variant="outline"
+                disabled={isSubmitting}
                 onPress={() => handleRemove(doc.id)}
                 style={styles.halfBtn}
               />
@@ -189,34 +294,32 @@ export default function DocumentsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <SectionTitle 
-          title="Supporting Documents" 
+        <SectionTitle
+          title="Supporting Documents"
           subtitle="Upload all required documents before continuing."
-          style={styles.header} 
+          style={styles.header}
         />
 
-        {/* REQUIRED DOCUMENTS SECTION */}
-        <SectionTitle 
-          title="Required Documents" 
+        <SectionTitle
+          title="Required Documents"
           subtitle={`${uploadedRequiredDocs} / ${totalRequiredDocs} Uploaded`}
-          style={styles.sectionHeader} 
+          style={styles.sectionHeader}
         />
         <Card style={styles.listCard}>
-          {requiredDocs.map((doc, index) => 
-            renderDocumentRow(doc, index, requiredDocs.length)
+          {requiredDocs.map((doc, index) =>
+            renderDocumentRow(doc, index, requiredDocs.length),
           )}
         </Card>
 
-        {/* OPTIONAL DOCUMENTS SECTION */}
         {optionalDocs.length > 0 && (
           <>
-            <SectionTitle 
-              title="Optional Documents" 
-              style={[styles.sectionHeader, styles.marginTop]} 
+            <SectionTitle
+              title="Optional Documents"
+              style={[styles.sectionHeader, styles.marginTop]}
             />
             <Card style={styles.listCard}>
-              {optionalDocs.map((doc, index) => 
-                renderDocumentRow(doc, index, optionalDocs.length)
+              {optionalDocs.map((doc, index) =>
+                renderDocumentRow(doc, index, optionalDocs.length),
               )}
             </Card>
           </>
@@ -224,10 +327,16 @@ export default function DocumentsScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
+        {errorText ? <Text style={styles.errorBanner}>{errorText}</Text> : null}
+        {progressText ? (
+          <Text style={styles.progressText}>{progressText}</Text>
+        ) : null}
+
         <Button
-          title="Continue"
-          onPress={handleContinue}
-          disabled={!isContinueEnabled}
+          title={errorText ? "Retry Failed Uploads" : "Submit"}
+          onPress={handleSubmit}
+          disabled={!isContinueEnabled || isSubmitting}
+          loading={isSubmitting}
           style={styles.fullButton}
         />
       </View>
@@ -277,9 +386,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: typography.fontWeight.medium,
   },
-  requiredText: {
-    color: colors.error,
-  },
+  requiredText: { color: colors.error },
   uploadedBadge: {
     backgroundColor: "#F0FDF4",
     paddingHorizontal: spacing.sm,
@@ -331,4 +438,18 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
   },
   fullButton: { width: "100%" },
+  progressText: {
+    textAlign: "center",
+    color: colors.primary,
+    fontSize: typography.fontSize.sm,
+    marginBottom: spacing.sm,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  errorBanner: {
+    textAlign: "center",
+    color: colors.error,
+    fontSize: typography.fontSize.sm,
+    marginBottom: spacing.sm,
+    fontWeight: typography.fontWeight.medium,
+  },
 });
