@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 import { View } from "react-native";
 import { Input, DateInput } from "../../index";
 import { FormSection } from "../FormSection";
@@ -15,7 +15,7 @@ interface StepProps {
   currentYear: number;
 }
 
-export const EmploymentPersonalStep = memo(function EmploymentPersonalStep({
+export function EmploymentPersonalStep({
   formData,
   updateField,
   currentYear,
@@ -99,4 +99,4 @@ export const EmploymentPersonalStep = memo(function EmploymentPersonalStep({
       </FormSection>
     </View>
   );
-});
+};

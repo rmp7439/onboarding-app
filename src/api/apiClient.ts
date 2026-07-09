@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 // Use local IP for Android emulator, localhost for iOS simulator
 const API_URL = process.env.EXPO_PUBLIC_API_URL ||  "http://192.168.0.249:5000/api";
 

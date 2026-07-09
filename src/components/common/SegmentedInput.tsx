@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, memo } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -27,7 +27,7 @@ export interface SegmentedInputProps {
   error?: string;
 }
 
-export const SegmentedInput = memo(function SegmentedInput({
+export function SegmentedInput({
   label,
   value,
   onChange,
@@ -196,7 +196,7 @@ export const SegmentedInput = memo(function SegmentedInput({
       {!!error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
-});
+};
 
 const styles = StyleSheet.create({
   container: {

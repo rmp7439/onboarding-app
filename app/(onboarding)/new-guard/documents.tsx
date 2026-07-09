@@ -20,6 +20,7 @@ import {
   mapEmployeeData,
   mapDocumentType,
 } from "../../../src/utils/dataMappers";
+import { IMAGE_QUALITY } from "../../../src/constants/App";
 
 const INITIAL_DOCUMENTS: DocumentItem[] = [
   {
@@ -91,13 +92,13 @@ export default function DocumentsScreen() {
       if (source === "gallery") {
         result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: 0.8,
+          quality: IMAGE_QUALITY,
         });
       } else {
         await ImagePicker.requestCameraPermissionsAsync();
         result = await ImagePicker.launchCameraAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: 0.8,
+          quality: IMAGE_QUALITY,
         });
       }
 
@@ -138,29 +139,24 @@ export default function DocumentsScreen() {
     try {
       let empId = registeredEmployeeId;
 
-      // 1. Submit Registration Data
       if (!empId) {
         setProgressText("Registering employee details...");
         const mappedData = mapEmployeeData(data);
-        console.log("MAPPED DATA:", mappedData);
         const result = await api.registerEmployee(mappedData);
         empId = result.id;
         setRegisteredEmployeeId(empId);
       }
 
-      // 2. Upload Captured Selfie
       if (!isSelfieUploaded && data.selfieUri) {
         setProgressText("Uploading security selfie...");
         await api.uploadSelfie(empId!, data.selfieUri);
         setIsSelfieUploaded(true);
       }
 
-      // 3. Sequentially Upload Required & Optional Documents
       const docsToUpload = documents.filter((doc) => doc.uri !== null);
       for (let i = 0; i < docsToUpload.length; i++) {
         const doc = docsToUpload[i];
 
-        // Skip already uploaded documents on a retry event
         if (completedDocUploads.includes(doc.id)) continue;
 
         setProgressText(
@@ -169,12 +165,9 @@ export default function DocumentsScreen() {
         const docType = mapDocumentType(doc.id);
 
         await api.uploadDocument(empId!, docType, doc.uri!);
-
-        // Save progress explicitly so failures don't drop progress
         setCompletedDocUploads((prev) => [...prev, doc.id]);
       }
 
-      // 4. Finalize & Navigate
       setProgressText("Finalizing profile...");
       const finalDocNames = docsToUpload.map((doc) => doc.title);
       updateData({ uploadedDocuments: finalDocNames });

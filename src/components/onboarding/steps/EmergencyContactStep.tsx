@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { Input } from '../../index';
 import { FormSection } from '../FormSection';
@@ -11,7 +11,7 @@ interface StepProps {
   updateField: (field: keyof EmployeeFormData, value: string) => void;
 }
 
-export const EmergencyContactStep = memo(function EmergencyContactStep({ formData, updateField }: StepProps) {
+export function EmergencyContactStep({ formData, updateField }: StepProps) {
   return (
     <View>
       <FormSection title="Emergency Contact">
@@ -41,4 +41,4 @@ export const EmergencyContactStep = memo(function EmergencyContactStep({ formDat
       </FormSection>
     </View>
   );
-});
+};

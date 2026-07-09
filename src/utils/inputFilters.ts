@@ -17,11 +17,3 @@ export const isValidAddressInput = (value: string): boolean => {
 export const allowOnlyNumbers = (value: string): string => {
   return value.replace(/\D/g, '');
 };
-
-export const allowAlphaNumeric = (value: string): string => {
-  return value.replace(/[^a-zA-Z0-9]/g, '');
-};
-
-export const allowAddressCharacters = (value: string): string => {
-  return value.replace(/[^a-zA-Z0-9\s,.-/]/g, '');
-};

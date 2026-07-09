@@ -21,13 +21,6 @@ import { EmployeeFormData } from "../../../src/types/EmployeeForm";
 
 const TOTAL_STEPS = 4;
 
-const STEP_TITLES = [
-  "Employment & Personal Details",
-  "Identity Details",
-  "Address & Bank Details",
-  "Emergency Contacts",
-];
-
 export default function EmployeeDetailsScreen() {
   const router = useRouter();
   const { updateData } = useOnboarding();
@@ -95,25 +88,22 @@ export default function EmployeeDetailsScreen() {
 
   const handleNextStep = useCallback(() => {
     if (currentStep < TOTAL_STEPS) {
-      const next = currentStep + 1;
-      setCurrentStep(next);
-      // Hardware-accelerated sliding animation
+      setCurrentStep(currentStep + 1);
       Animated.timing(slideAnim, {
-        toValue: -(next - 1) * stepWidth,
+        toValue: -currentStep * stepWidth,
         duration: 250,
         useNativeDriver: true,
       }).start();
     } else {
       handleFinalSubmit();
     }
-  }, [currentStep, stepWidth, slideAnim, formData]); // Added formData to dependencies
+  }, [currentStep, stepWidth, slideAnim, formData]);
 
   const handlePrevStep = useCallback(() => {
     if (currentStep > 1) {
-      const prev = currentStep - 1;
-      setCurrentStep(prev);
+      setCurrentStep(currentStep - 1);
       Animated.timing(slideAnim, {
-        toValue: -(prev - 1) * stepWidth,
+        toValue: -(currentStep - 2) * stepWidth,
         duration: 250,
         useNativeDriver: true,
       }).start();

@@ -55,9 +55,9 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "space-between" },
+  container: { flex: 1 },
   content: { flex: 1 },
-  header: { marginBottom: spacing.xl, marginTop: spacing.xl },
+  header: { marginVertical: spacing.xl },
   card: { padding: spacing.md },
   input: {
     borderWidth: 1,

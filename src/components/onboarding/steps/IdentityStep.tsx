@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { Input, SegmentedInput } from '../../index';
 import { FormSection } from '../FormSection';
@@ -10,7 +10,7 @@ interface StepProps {
   updateField: (field: keyof EmployeeFormData, value: string) => void;
 }
 
-export const IdentityStep = memo(function IdentityStep({ formData, updateField }: StepProps) {
+export function IdentityStep({ formData, updateField }: StepProps) {
   return (
     <View>
       <FormSection title="Identity Details">
@@ -57,4 +57,4 @@ export const IdentityStep = memo(function IdentityStep({ formData, updateField }
       </FormSection>
     </View>
   );
-});
+};

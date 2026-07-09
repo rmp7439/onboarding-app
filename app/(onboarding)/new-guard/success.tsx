@@ -9,15 +9,7 @@ export default function SuccessScreen() {
   const router = useRouter();
   const { resetData } = useOnboarding();
 
-  // Inside app/(onboarding)/new-guard/success.tsx
-
-  const handleRegisterAnother = () => {
-    resetData();
-    // TODO: Route to initial step of manual entry in V2
-    router.replace("/(onboarding)/home"); 
-  };
-
-  const handleGoToDashboard = () => {
+  const handleComplete = () => {
     resetData();
     router.replace("/(onboarding)/home");
   };
@@ -58,13 +50,13 @@ export default function SuccessScreen() {
       <View style={styles.footer}>
         <Button
           title="Register Another Employee"
-          onPress={handleRegisterAnother}
+          onPress={handleComplete}
           style={styles.button}
         />
         <Button
           title="Go To Dashboard"
           variant="outline"
-          onPress={handleGoToDashboard}
+          onPress={handleComplete}
           style={styles.button}
         />
       </View>
@@ -73,7 +65,7 @@ export default function SuccessScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "space-between" },
+  container: { flex: 1 },
   content: {
     flex: 1,
     justifyContent: "center",
@@ -88,13 +80,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
     justifyContent: "center",
     alignItems: "center",
-    ...(colors.success && {
-      shadowColor: colors.success,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.3,
-      shadowRadius: 16,
-      elevation: 10,
-    }),
+    shadowColor: colors.success,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 10,
   },
   iconText: {
     color: colors.white,

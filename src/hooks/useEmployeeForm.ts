@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useOnboarding } from '../context/OnboardingContext';
 import { EmployeeFormData } from '../types/EmployeeForm';
 
@@ -35,7 +35,7 @@ export function useEmployeeForm() {
     em1Mobile: data.emergencyContact.mobile,
   }));
 
-  const updateField = useCallback((field: keyof EmployeeFormData, value: string) => {
+  const updateField = (field: keyof EmployeeFormData, value: string) => {
     setFormData((prev) => {
       if (prev[field] === value) return prev; // Performance: Bail out if the value hasn't changed
 
@@ -48,20 +48,10 @@ export function useEmployeeForm() {
       
       return newData;
     });
-  }, []);
-
-  const updateNestedField = useCallback((field: keyof EmployeeFormData, nestedKey: string, value: string) => {
-    // Scaffolded for deeper scaling later if needed
-  }, []);
-
-  const resetForm = useCallback(() => {
-    // Reset to context data logic (omitted for brevity, can rebuild from initial state)
-  }, []);
+  };
 
   return {
     formData,
     updateField,
-    updateNestedField,
-    resetForm,
   };
 }

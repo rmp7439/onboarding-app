@@ -5,10 +5,10 @@ import {
   StyleSheet,
   Pressable,
   Animated,
-  SafeAreaView,
   Image,
   useWindowDimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
@@ -16,6 +16,7 @@ import { Screen, SectionTitle, Button, Card } from "../../../src/components";
 import { colors, spacing, typography, radius } from "../../../src/theme";
 import { useOnboarding } from "../../../src/context/OnboardingContext";
 import { ANIMATION } from "../../../src/constants/Animation";
+import { IMAGE_QUALITY } from "../../../src/constants/App";
 
 export default function CapturePhotoScreen() {
   const router = useRouter();
@@ -34,25 +35,22 @@ export default function CapturePhotoScreen() {
 
   const handleCapture = async () => {
     if (!cameraRef.current || isCapturing) return;
-
     setIsCapturing(true);
 
-    // 1. Trigger realistic camera flash animation
     Animated.sequence([
       Animated.timing(flashAnim, {
         toValue: 1,
-        duration: ANIMATION?.FLASH_IN_MS || 50,
+        duration: ANIMATION.FLASH_IN_MS || 50,
         useNativeDriver: true,
       }),
       Animated.timing(flashAnim, {
         toValue: 0,
-        duration: ANIMATION?.FLASH_OUT_MS || 400,
+        duration: ANIMATION.FLASH_OUT_MS || 400,
         useNativeDriver: true,
       }),
     ]).start();
 
     try {
-      // 2. Capture actual photo from Expo Camera (1.0 Quality to preserve detail before crop)
       const photoData = await cameraRef.current.takePictureAsync({
         quality: 1,
         base64: false,
@@ -62,50 +60,30 @@ export default function CapturePhotoScreen() {
         let photoWidth = photoData.width;
         let photoHeight = photoData.height;
 
-        // Normalization: Ensure dimensions match portrait orientation
         if (screenWidth < screenHeight && photoWidth > photoHeight) {
           photoWidth = photoData.height;
           photoHeight = photoData.width;
         }
 
-        // Calculate how the camera feed was scaled to fill the screen
-        const scale = Math.max(
-          screenWidth / photoWidth,
-          screenHeight / photoHeight,
-        );
+        const scale = Math.max(screenWidth / photoWidth, screenHeight / photoHeight);
         const displayedWidth = photoWidth * scale;
         const displayedHeight = photoHeight * scale;
 
-        // Calculate how much of the image was pushed off-screen
         const offsetX = (displayedWidth - screenWidth) / 2;
         const offsetY = (displayedHeight - screenHeight) / 2;
-
-        // Face guide is exactly 280px wide and centered horizontally
         const guideLeft = (screenWidth - 280) / 2;
 
-        // Map screen coordinates back to the original photo's pixel coordinates
         const cropX = Math.max(0, Math.floor((guideLeft + offsetX) / scale));
         const cropY = Math.max(0, Math.floor((guideTop + offsetY) / scale));
         const cropWidth = Math.min(photoWidth, Math.floor(280 / scale));
         const cropHeight = Math.min(photoHeight, Math.floor(380 / scale));
 
-        // Crop the image and compress for storage
         const manipResult = await manipulateAsync(
           photoData.uri,
-          [
-            {
-              crop: {
-                originX: cropX,
-                originY: cropY,
-                width: cropWidth,
-                height: cropHeight,
-              },
-            },
-          ],
-          { compress: 0.8, format: SaveFormat.JPEG },
+          [{ crop: { originX: cropX, originY: cropY, width: cropWidth, height: cropHeight } }],
+          { compress: IMAGE_QUALITY, format: SaveFormat.JPEG }
         );
 
-        // Store the final cropped URI
         setPhoto(manipResult.uri);
       }
     } catch (error) {
@@ -115,10 +93,6 @@ export default function CapturePhotoScreen() {
     }
   };
 
-  const handleRetake = () => {
-    setPhoto(null);
-  };
-
   const handleContinue = () => {
     if (photo) {
       updateData({ selfieUri: photo });
@@ -126,9 +100,6 @@ export default function CapturePhotoScreen() {
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // PERMISSION STATE
-  // ---------------------------------------------------------------------------
   if (!permission) {
     return <View style={styles.container} />;
   }
@@ -155,9 +126,6 @@ export default function CapturePhotoScreen() {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // PREVIEW STATE
-  // ---------------------------------------------------------------------------
   if (photo) {
     return (
       <Screen style={styles.container}>
@@ -184,7 +152,7 @@ export default function CapturePhotoScreen() {
           <Button
             title="Retake"
             variant="outline"
-            onPress={handleRetake}
+            onPress={() => setPhoto(null)}
             style={[styles.fullButton, styles.secondaryButton]}
           />
         </View>
@@ -192,9 +160,6 @@ export default function CapturePhotoScreen() {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // LIVE CAMERA STATE
-  // ---------------------------------------------------------------------------
   return (
     <SafeAreaView style={styles.cameraContainer}>
       <CameraView
@@ -246,7 +211,7 @@ export default function CapturePhotoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "space-between" },
+  container: { flex: 1 },
   content: { flex: 1 },
   permissionContent: {
     flex: 1,
@@ -255,7 +220,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   permissionIcon: { fontSize: 64, marginBottom: spacing.xl },
-  permissionHeader: { alignItems: "center", textAlign: "center" },
+  permissionHeader: { alignItems: "center" },
   header: { marginBottom: spacing.xl, marginTop: spacing.md },
   previewCard: {
     padding: spacing.md,

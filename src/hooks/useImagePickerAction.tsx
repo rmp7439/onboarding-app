@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Platform, ActionSheetIOS } from 'react-native';
 import ImagePickerModal from '../components/common/ImagePickerModal';
 
 export function useImagePickerAction() {
   const [isModalVisible, setModalVisible] = useState(false);
-  const [callbacks, setCallbacks] = useState<{ onCamera: () => void, onGallery: () => void } | null>(null);
+  
+  // Use a ref to store callbacks instead of state to prevent unnecessary re-renders
+  const callbacks = useRef<{ onCamera: () => void, onGallery: () => void } | null>(null);
 
   const openPicker = (onCamera: () => void, onGallery: () => void) => {
     if (Platform.OS === 'ios') {
@@ -16,19 +18,19 @@ export function useImagePickerAction() {
         }
       );
     } else {
-      setCallbacks({ onCamera, onGallery });
+      callbacks.current = { onCamera, onGallery };
       setModalVisible(true);
     }
   };
 
   const handleCamera = () => {
     setModalVisible(false);
-    if (callbacks) callbacks.onCamera();
+    if (callbacks.current) callbacks.current.onCamera();
   };
 
   const handleGallery = () => {
     setModalVisible(false);
-    if (callbacks) callbacks.onGallery();
+    if (callbacks.current) callbacks.current.onGallery();
   };
 
   const PickerComponent = () => (
