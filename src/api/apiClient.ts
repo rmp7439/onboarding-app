@@ -1,8 +1,7 @@
 import { Platform } from 'react-native';
 
 // Use local IP for Android emulator, localhost for iOS simulator
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 
-  (Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5000/api');
+const API_URL = process.env.EXPO_PUBLIC_API_URL ||  "http://192.168.0.249:5000/api";
 
 export const api = {
   registerEmployee: async (employeeData: any) => {
