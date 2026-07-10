@@ -5,7 +5,8 @@ import {
   StyleSheet, 
   ViewStyle, 
   KeyboardAvoidingView, 
-  Platform 
+  Platform,
+  RefreshControlProps
 } from 'react-native';
 import { SafeAreaView, Edge } from 'react-native-safe-area-context';
 import { colors, spacing } from '../../theme';
@@ -15,6 +16,7 @@ export interface ScreenProps {
   scrollable?: boolean;
   style?: ViewStyle;
   safeAreaEdges?: Edge[];
+  refreshControl?: React.ReactElement<RefreshControlProps>;
 }
 
 export function Screen({
@@ -22,12 +24,14 @@ export function Screen({
   scrollable = true,
   style,
   safeAreaEdges = ['top', 'bottom', 'left', 'right'],
+  refreshControl,
 }: ScreenProps) {
   const content = scrollable ? (
     <ScrollView
       contentContainerStyle={[styles.scrollContent, style]}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
+      refreshControl={refreshControl}
     >
       {children}
     </ScrollView>

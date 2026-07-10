@@ -57,5 +57,15 @@ export const api = {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || `Failed to upload ${type}`);
     return result.data;
+  },
+
+  getEmployeeProfile: async (employeeId: string) => {
+    const response = await fetch(`${API_URL}/employee/profile/${employeeId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to fetch profile');
+    return result.data;
   }
 };
