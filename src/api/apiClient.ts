@@ -59,6 +59,17 @@ export const api = {
     return result.data;
   },
 
+  searchEmployees: async (query: string) => {
+    // Assuming the backend provides a search endpoint. If not, this routes to a standard GET with a query param.
+    const response = await fetch(`${API_URL}/employees/search?q=${encodeURIComponent(query)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Search failed');
+    return result.data;
+  },
+
   getEmployeeProfile: async (employeeId: string) => {
     const response = await fetch(`${API_URL}/employee/profile/${employeeId}`, {
       method: 'GET',

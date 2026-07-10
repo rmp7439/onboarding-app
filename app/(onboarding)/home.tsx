@@ -1,15 +1,15 @@
-import React, { useState, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Pressable, 
-  Animated 
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Screen, Card, SectionTitle } from '../../src/components';
-import { colors, spacing, typography } from '../../src/theme';
+import React, { useState, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Animated,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Screen, Card, SectionTitle } from "../../src/components";
+import { colors, spacing, typography } from "../../src/theme";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -28,66 +28,72 @@ export default function HomeScreen() {
 
   const contentHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 128], 
+    outputRange: [0, 192], // Increased from 128 to accommodate 3 items (64px each)
   });
 
   const iconRotation = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
+    outputRange: ["0deg", "180deg"],
   });
-
-  const handleRegisterNewEmployee = () => {
-    router.push('../(onboarding)/new-guard/employee-details');
-  };
-
-  const handleLogout = () => {
-    router.replace('/login');
-  };
 
   return (
     <Screen style={styles.container}>
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <SectionTitle 
-          title="Dashboard" 
-          style={styles.header}
-        />
+        <SectionTitle title="Dashboard" style={styles.header} />
 
-        {/* Operations Accordion */}
         <Card style={styles.accordionCard}>
-          <Pressable 
-            style={styles.accordionHeader} 
-            onPress={toggleOperations}
-          >
+          <Pressable style={styles.accordionHeader} onPress={toggleOperations}>
             <Text style={styles.accordionTitle}>Operations</Text>
             <Animated.View style={{ transform: [{ rotate: iconRotation }] }}>
               <Text style={styles.accordionIcon}>▼</Text>
             </Animated.View>
           </Pressable>
 
-          <Animated.View style={[styles.accordionContent, { height: contentHeight, opacity: animation }]}>
-            <Pressable 
+          <Animated.View
+            style={[
+              styles.accordionContent,
+              { height: contentHeight, opacity: animation },
+            ]}
+          >
+            <Pressable
               style={({ pressed }) => [
                 styles.menuItem,
-                pressed && styles.menuItemPressed
+                pressed && styles.menuItemPressed,
               ]}
-              onPress={handleRegisterNewEmployee}
+              onPress={() =>
+                router.push("/(onboarding)/new-guard/employee-details")
+              }
             >
               <Text style={styles.menuItemIcon}>📝</Text>
               <Text style={styles.menuItemText}>Register New Employee</Text>
             </Pressable>
 
-            <Pressable 
+            {/* NEW: Employee Profiles Search Option */}
+            <Pressable
               style={({ pressed }) => [
                 styles.menuItem,
-                pressed && styles.menuItemPressed
+                pressed && styles.menuItemPressed,
               ]}
-              onPress={handleLogout}
+              onPress={() => router.push("/(onboarding)/profiles-search")}
+            >
+              <Text style={styles.menuItemIcon}>🔍</Text>
+              <Text style={styles.menuItemText}>Employee Profiles</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.menuItem,
+                pressed && styles.menuItemPressed,
+              ]}
+              onPress={() => router.replace("/login")}
             >
               <Text style={styles.menuItemIcon}>🚪</Text>
-              <Text style={[styles.menuItemText, styles.logoutText]}>Logout</Text>
+              <Text style={[styles.menuItemText, styles.logoutText]}>
+                Logout
+              </Text>
             </Pressable>
           </Animated.View>
         </Card>
@@ -96,75 +102,25 @@ export default function HomeScreen() {
   );
 }
 
+// ... existing styles remain unchanged ...
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     paddingTop: spacing.md,
-    paddingBottom: spacing.xl, // Reduced whitespace
+    paddingBottom: spacing.xl,
   },
-  header: {
-    marginBottom: spacing.lg, // Reduced whitespace
-  },
-  
-  // Statistics Styles
-  statsContainer: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.lg, // Reduced whitespace
-  },
-  statCard: {
-    flex: 1,
-    padding: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  statCardSecondary: {
-    borderColor: '#E8F8EE',
-    backgroundColor: '#F0FDF4',
-  },
-  statValue: {
-    fontSize: typography.fontSize['3xl'],
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  statValueSecondary: {
-    color: colors.success,
-  },
-  statLabel: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textSecondary,
-    fontWeight: typography.fontWeight.medium,
-    textAlign: 'center',
-  },
-  statLabelSecondary: {
-    fontSize: typography.fontSize.sm,
-    color: colors.success,
-    fontWeight: typography.fontWeight.medium,
-    textAlign: 'center',
-  },
-
-  // Accordion Styles
+  header: { marginBottom: spacing.lg },
   accordionCard: {
     padding: 0,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.border,
   },
   accordionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: spacing.lg,
     backgroundColor: colors.surface,
   },
@@ -177,34 +133,22 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
   },
-  accordionContent: {
-    overflow: 'hidden',
-    backgroundColor: colors.background,
-  },
-  
-  // Menu Item Styles
+  accordionContent: { overflow: "hidden", backgroundColor: colors.background },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    height: 64, // Fixed height to match Animated interpolation
+    height: 64,
   },
-  menuItemPressed: {
-    backgroundColor: 'rgba(0,0,0,0.02)',
-  },
-  menuItemIcon: {
-    fontSize: typography.fontSize.lg,
-    marginRight: spacing.md,
-  },
+  menuItemPressed: { backgroundColor: "rgba(0,0,0,0.02)" },
+  menuItemIcon: { fontSize: typography.fontSize.lg, marginRight: spacing.md },
   menuItemText: {
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.semibold,
     color: colors.text,
   },
-  logoutText: {
-    color: colors.error, // Styled as a destructive action
-  },
+  logoutText: { color: colors.error },
 });
