@@ -36,6 +36,8 @@ export default function LoginScreen() {
             keyboardType="numeric"
             maxLength={10}
             placeholderTextColor={colors.textSecondary}
+            returnKeyType="done"
+            onSubmitEditing={handleContinue}
           />
           {showError && (
             <Text style={styles.errorText}>Invalid Phone Number</Text>

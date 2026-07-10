@@ -190,18 +190,28 @@ export default function EmployeeDetailsScreen() {
                 formData={formData}
                 updateField={updateField}
                 currentYear={currentYear}
+                onNextStep={handleNextStep} 
               />
             </View>
             <View style={{ width: stepWidth }}>
-              <IdentityStep formData={formData} updateField={updateField} />
+              <IdentityStep 
+                formData={formData} 
+                updateField={updateField} 
+                onNextStep={handleNextStep} 
+              />
             </View>
             <View style={{ width: stepWidth }}>
-              <AddressBankStep formData={formData} updateField={updateField} />
+              <AddressBankStep 
+                formData={formData} 
+                updateField={updateField} 
+                onNextStep={handleNextStep} 
+              />
             </View>
             <View style={{ width: stepWidth }}>
               <EmergencyContactStep
                 formData={formData}
                 updateField={updateField}
+                onNextStep={handleNextStep} 
               />
             </View>
           </Animated.View>

@@ -1,5 +1,5 @@
-import React from "react";
-import { View } from "react-native";
+import React, { useRef } from "react";
+import { View, TextInput } from "react-native";
 import { Input, DateInput } from "../../index";
 import { FormSection } from "../FormSection";
 import { GenderSelector } from "../GenderSelector";
@@ -13,13 +13,22 @@ interface StepProps {
   formData: EmployeeFormData;
   updateField: (field: keyof EmployeeFormData, value: string) => void;
   currentYear: number;
+  onNextStep?: () => void;
 }
 
 export function EmploymentPersonalStep({
   formData,
   updateField,
   currentYear,
+  onNextStep,
 }: StepProps) {
+  const unitSiteRef = useRef<TextInput>(null);
+  const firstNameRef = useRef<TextInput>(null);
+  const surnameRef = useRef<TextInput>(null);
+  const fatherNameRef = useRef<TextInput>(null);
+  const husbandNameRef = useRef<TextInput>(null);
+  const mobileNumberRef = useRef<TextInput>(null);
+
   return (
     <View>
       <FormSection title="Employment Details">
@@ -31,34 +40,42 @@ export function EmploymentPersonalStep({
           maxYear={currentYear}
         />
         <Input
+          ref={unitSiteRef}
           label="Unit / Site"
           value={formData.unitSite}
           onChangeText={(text) => updateField("unitSite", text)}
           placeholder="Enter unit or site"
+          returnKeyType="next"
+          onSubmitEditing={() => firstNameRef.current?.focus()}
+          blurOnSubmit={false}
         />
       </FormSection>
 
       <FormSection title="Personal Details">
         <Input
+          ref={firstNameRef}
           label="First Name"
           value={formData.firstName}
-          onChangeText={(text) => {
-            if (isValidNameInput(text)) updateField("firstName", text);
-          }}
+          onChangeText={(text) => { if (isValidNameInput(text)) updateField("firstName", text); }}
+          returnKeyType="next"
+          onSubmitEditing={() => surnameRef.current?.focus()}
+          blurOnSubmit={false}
         />
         <Input
+          ref={surnameRef}
           label="Surname"
           value={formData.surname}
-          onChangeText={(text) => {
-            if (isValidNameInput(text)) updateField("surname", text);
-          }}
+          onChangeText={(text) => { if (isValidNameInput(text)) updateField("surname", text); }}
+          returnKeyType="next"
+          onSubmitEditing={() => fatherNameRef.current?.focus()}
+          blurOnSubmit={false}
         />
         <Input
+          ref={fatherNameRef}
           label="Father's Name"
           value={formData.fatherName}
-          onChangeText={(text) => {
-            if (isValidNameInput(text)) updateField("fatherName", text);
-          }}
+          onChangeText={(text) => { if (isValidNameInput(text)) updateField("fatherName", text); }}
+          returnKeyType="done"
         />
 
         <GenderSelector
@@ -67,12 +84,14 @@ export function EmploymentPersonalStep({
         />
 
         <Input
+          ref={husbandNameRef}
           label="Husband's Name (Optional)"
           value={formData.husbandName}
-          onChangeText={(text) => {
-            if (isValidNameInput(text)) updateField("husbandName", text);
-          }}
+          onChangeText={(text) => { if (isValidNameInput(text)) updateField("husbandName", text); }}
           editable={formData.gender === "Female"}
+          returnKeyType="next"
+          onSubmitEditing={() => mobileNumberRef.current?.focus()}
+          blurOnSubmit={false}
         />
 
         <DateInput
@@ -84,13 +103,13 @@ export function EmploymentPersonalStep({
         />
 
         <Input
+          ref={mobileNumberRef}
           label="Mobile Number"
           value={formData.mobileNumber}
-          onChangeText={(text) =>
-            updateField("mobileNumber", formatMobile(text))
-          }
+          onChangeText={(text) => updateField("mobileNumber", formatMobile(text)) }
           keyboardType="number-pad"
           maxLength={10}
+          returnKeyType="done"
         />
         <BloodGroupSelector
           value={formData.bloodGroup}
@@ -99,4 +118,4 @@ export function EmploymentPersonalStep({
       </FormSection>
     </View>
   );
-};
+}

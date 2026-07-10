@@ -36,6 +36,8 @@ export default function OTPScreen() {
             keyboardType="numeric"
             maxLength={6}
             placeholderTextColor={colors.textSecondary}
+            returnKeyType="done"
+            onSubmitEditing={handleVerify}
           />
           {showError && <Text style={styles.errorText}>Invalid OTP</Text>}
         </Card>

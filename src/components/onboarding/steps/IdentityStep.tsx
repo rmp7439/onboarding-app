@@ -1,5 +1,5 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useRef } from 'react';
+import { View, TextInput } from 'react-native';
 import { Input, SegmentedInput } from '../../index';
 import { FormSection } from '../FormSection';
 import { EmployeeFormData } from '../../../types/EmployeeForm';
@@ -8,9 +8,14 @@ import { allowOnlyNumbers } from '../../../utils/inputFilters';
 interface StepProps {
   formData: EmployeeFormData;
   updateField: (field: keyof EmployeeFormData, value: string) => void;
+  onNextStep?: () => void;
 }
 
-export function IdentityStep({ formData, updateField }: StepProps) {
+export function IdentityStep({ formData, updateField, onNextStep }: StepProps) {
+  const panRef = useRef<{ focus: () => void }>(null);
+  const uanRef = useRef<{ focus: () => void }>(null);
+  const esicRef = useRef<TextInput>(null);
+
   return (
     <View>
       <FormSection title="Identity Details">
@@ -19,9 +24,13 @@ export function IdentityStep({ formData, updateField }: StepProps) {
           value={formData.aadhaarNumber}
           onChangeText={(text) => updateField('aadhaarNumber', text)}
           maxLength={15}
+          returnKeyType="next"
+          onSubmitEditing={() => panRef.current?.focus()}
+          blurOnSubmit={false}
         />
         
         <SegmentedInput
+          ref={panRef}
           label="PAN Number"
           value={formData.panNumber}
           onChange={(val) => updateField('panNumber', val)}
@@ -30,9 +39,12 @@ export function IdentityStep({ formData, updateField }: StepProps) {
             { length: 4, type: 'numeric' },
             { length: 1, type: 'alpha' },
           ]}
+          returnKeyType="next"
+          onSubmitEditing={() => uanRef.current?.focus()}
         />
         
         <SegmentedInput
+          ref={uanRef}
           label="UAN Number"
           value={formData.uanNumber}
           onChange={(val) => updateField('uanNumber', val)}
@@ -41,16 +53,21 @@ export function IdentityStep({ formData, updateField }: StepProps) {
             { length: 4, type: 'numeric' },
             { length: 4, type: 'numeric' },
           ]}
+          returnKeyType="next"
+          onSubmitEditing={() => esicRef.current?.focus()}
         />
         
         <Input 
+          ref={esicRef}
           label="ESIC Number" 
           value={formData.esicNumber} 
           onChangeText={(text) => updateField('esicNumber', allowOnlyNumbers(text))} 
           keyboardType="numeric" 
           maxLength={17} 
+          returnKeyType="done"
+          onSubmitEditing={onNextStep}
         />
       </FormSection>
     </View>
   );
-};
+}
