@@ -10,6 +10,7 @@ import { mapEmployeeData, mapDocumentType } from "../../../src/utils/dataMappers
 import { DocumentItem } from "../../../src/types/Document";
 import { colors, spacing, typography, radius } from "../../../src/theme";
 import { IMAGE_QUALITY } from "../../../src/constants/App";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const INITIAL_DOCUMENTS: DocumentItem[] = [
   { id: "aadhaar", title: "Aadhaar Card", uri: null, filename: null, required: true },
@@ -104,6 +105,9 @@ export default function DocumentsScreen() {
       setProgressText("Finalizing profile...");
       const finalDocNames = docsToUpload.map((doc) => doc.title);
       updateData({ uploadedDocuments: finalDocNames });
+
+      // NEW: Persist the employeeId locally after a completely successful registration
+      await AsyncStorage.setItem('employeeId', empId!);
 
       router.push("/(onboarding)/new-guard/success");
     } catch (error: any) {
