@@ -21,7 +21,7 @@ interface EmployeeProfile {
 export default function ProfileScreen() {
   const router = useRouter();
 
-  // Extract ID from routing parameters
+  // Extract ID entirely from routing parameters
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [profile, setProfile] = useState<EmployeeProfile | null>(null);
@@ -30,7 +30,7 @@ export default function ProfileScreen() {
 
   const fetchProfile = useCallback(async () => {
     if (!id) {
-      setError("Invalid Employee ID");
+      setError("Invalid Employee ID. Please go back and search again.");
       setIsLoading(false);
       return;
     }
@@ -90,7 +90,7 @@ export default function ProfileScreen() {
         <Text style={styles.errorIcon}>⚠️</Text>
         <Text style={styles.errorText}>{error}</Text>
         <Button
-          title="Go Back"
+          title="Back to Search"
           onPress={() => router.back()}
           style={styles.retryButton}
         />
@@ -174,6 +174,7 @@ export default function ProfileScreen() {
   );
 }
 
+// ... existing styles ...
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { marginTop: spacing.md, marginBottom: spacing.lg },
