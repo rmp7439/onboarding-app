@@ -9,9 +9,10 @@ interface StepProps {
   formData: EmployeeFormData;
   updateField: (field: keyof EmployeeFormData, value: string) => void;
   onNextStep?: () => void;
+  errors: Partial<Record<keyof EmployeeFormData, string>>;
 }
 
-export function IdentityStep({ formData, updateField, onNextStep }: StepProps) {
+export function IdentityStep({ formData, updateField, onNextStep, errors }: StepProps) {
   const panRef = useRef<{ focus: () => void }>(null);
   const uanRef = useRef<{ focus: () => void }>(null);
   const esicRef = useRef<TextInput>(null);
@@ -22,6 +23,7 @@ export function IdentityStep({ formData, updateField, onNextStep }: StepProps) {
         <Input
           label="Aadhaar Number"
           value={formData.aadhaarNumber}
+          error={errors.aadhaarNumber}
           onChangeText={(text) => updateField('aadhaarNumber', text)}
           maxLength={15}
           returnKeyType="next"
@@ -33,6 +35,7 @@ export function IdentityStep({ formData, updateField, onNextStep }: StepProps) {
           ref={panRef}
           label="PAN Number"
           value={formData.panNumber}
+          error={errors.panNumber}
           onChange={(val) => updateField('panNumber', val)}
           segments={[
             { length: 5, type: 'alpha' },
@@ -47,6 +50,7 @@ export function IdentityStep({ formData, updateField, onNextStep }: StepProps) {
           ref={uanRef}
           label="UAN Number"
           value={formData.uanNumber}
+          error={errors.uanNumber}
           onChange={(val) => updateField('uanNumber', val)}
           segments={[
             { length: 4, type: 'numeric' },
@@ -60,7 +64,8 @@ export function IdentityStep({ formData, updateField, onNextStep }: StepProps) {
         <Input 
           ref={esicRef}
           label="ESIC Number" 
-          value={formData.esicNumber} 
+          value={formData.esicNumber}
+          error={errors.esicNumber} 
           onChangeText={(text) => updateField('esicNumber', allowOnlyNumbers(text))} 
           keyboardType="numeric" 
           maxLength={17} 

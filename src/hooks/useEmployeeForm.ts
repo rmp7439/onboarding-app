@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { useOnboarding } from '../context/OnboardingContext';
-import { EmployeeFormData } from '../types/EmployeeForm';
+import { useState, useCallback } from "react";
+import { useOnboarding } from "../context/OnboardingContext";
+import { EmployeeFormData } from "../types/EmployeeForm";
 
 export function useEmployeeForm() {
   const { data } = useOnboarding();
@@ -35,23 +35,128 @@ export function useEmployeeForm() {
     em1Mobile: data.emergencyContact.mobile,
   }));
 
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof EmployeeFormData, string>>
+  >({});
+
   const updateField = (field: keyof EmployeeFormData, value: string) => {
     setFormData((prev) => {
       if (prev[field] === value) return prev; // Performance: Bail out if the value hasn't changed
 
       const newData = { ...prev, [field]: value };
-      
+
       // Enforce strict clearing of Husband's Name if Gender is not Female
-      if (field === 'gender' && value !== 'Female') {
-        newData.husbandName = '';
+      if (field === "gender" && value !== "Female") {
+        newData.husbandName = "";
       }
-      
+
       return newData;
     });
+
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
+
+  // NEW: Reusable validation utility
+  const validateStep = useCallback(
+    (step: number): boolean => {
+      const newErrors: Partial<Record<keyof EmployeeFormData, string>> = {};
+      let isValid = true;
+
+      const check = (
+        field: keyof EmployeeFormData,
+        condition: boolean,
+        msg: string,
+      ) => {
+        if (!condition) {
+          newErrors[field] = msg;
+          isValid = false;
+        }
+      };
+
+      if (step === 1) {
+        check(
+          "dateOfJoining",
+          formData.dateOfJoining.length === 10,
+          "Required",
+        );
+        check("unitSite", formData.unitSite.length > 0, "Required");
+        check("firstName", formData.firstName.length > 0, "Required");
+        check("surname", formData.surname.length > 0, "Required");
+        check("fatherName", formData.fatherName.length > 0, "Required");
+        check("gender", formData.gender.length > 0, "Required");
+        check("dateOfBirth", formData.dateOfBirth.length === 10, "Required");
+        check(
+          "mobileNumber",
+          formData.mobileNumber.length === 10,
+          "Must be 10 digits",
+        );
+        check("bloodGroup", formData.bloodGroup.length > 0, "Required");
+      } else if (step === 2) {
+        check(
+          "aadhaarNumber",
+          formData.aadhaarNumber.trim().length > 0,
+          "Required",
+        );
+        check(
+          "panNumber",
+          formData.panNumber.length === 10,
+          "Must be 10 characters",
+        );
+        check(
+          "uanNumber",
+          formData.uanNumber.length === 12,
+          "Must be 12 digits",
+        );
+        check(
+          "esicNumber",
+          formData.esicNumber.length === 17,
+          "Must be 17 digits",
+        );
+      } else if (step === 3) {
+        check(
+          "permanentAddress",
+          formData.permanentAddress.length > 0,
+          "Required",
+        );
+        check("currentAddress", formData.currentAddress.length > 0, "Required");
+        check("city", formData.city.length > 0, "Required");
+        check("state", formData.state.length > 0, "Required");
+        check("pinCode", formData.pinCode.length === 6, "Must be 6 digits");
+        check("bankName", formData.bankName.length > 0, "Required");
+        check(
+          "accountNumber",
+          formData.accountNumber.length === 16,
+          "Must be 16 digits",
+        );
+        check(
+          "ifscCode",
+          formData.ifscCode.length === 11,
+          "Must be 11 characters",
+        );
+        check("branch", formData.branch.length > 0, "Required");
+        check("micrCode", formData.micrCode.length === 9, "Must be 9 digits");
+      } else if (step === 4) {
+        check("em1Name", formData.em1Name.length > 0, "Required");
+        check("em1Relation", formData.em1Relation.length > 0, "Required");
+        check(
+          "em1Mobile",
+          formData.em1Mobile.length === 10,
+          "Must be 10 digits",
+        );
+      }
+
+      setErrors(newErrors);
+      return isValid;
+    },
+    [formData],
+  );
 
   return {
     formData,
     updateField,
+    errors,
+    validateStep,
   };
 }

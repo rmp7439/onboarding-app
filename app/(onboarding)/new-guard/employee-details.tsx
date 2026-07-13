@@ -17,76 +17,30 @@ import { EmergencyContactStep } from "../../../src/components/onboarding/steps/E
 import { useOnboarding } from "../../../src/context/OnboardingContext";
 import { useEmployeeForm } from "../../../src/hooks/useEmployeeForm";
 import { colors, spacing } from "../../../src/theme";
-import { EmployeeFormData } from "../../../src/types/EmployeeForm";
 
 const TOTAL_STEPS = 4;
 
 export default function EmployeeDetailsScreen() {
   const router = useRouter();
   const { updateData } = useOnboarding();
-  const { formData, updateField } = useEmployeeForm();
+  
+  // Cleaned up duplicate declarations - everything is imported here once
+  const { formData, updateField, errors, validateStep } = useEmployeeForm();
 
   // Layout measurements for the smooth horizontal slide
   const { width } = useWindowDimensions();
-  // Screen component applies spacing.md (16px) padding to all sides, so we subtract 32px
   const stepWidth = width - spacing.md * 2;
 
   const [currentStep, setCurrentStep] = useState(1);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
-  // Memoized Validation
-  const isStepValid = useCallback((step: number, data: EmployeeFormData) => {
-    switch (step) {
-      case 1:
-        return (
-          data.dateOfJoining.length === 10 &&
-          data.unitSite.length > 0 &&
-          data.firstName.length > 0 &&
-          data.surname.length > 0 &&
-          data.fatherName.length > 0 &&
-          data.gender.length > 0 &&
-          data.dateOfBirth.length === 10 &&
-          data.mobileNumber.length === 10 &&
-          data.bloodGroup.length > 0
-        );
-      case 2:
-        return (
-          data.aadhaarNumber.trim().length>0 &&
-          data.panNumber.length === 10 &&
-          data.uanNumber.length === 12 &&
-          data.esicNumber.length === 17
-        );
-      case 3:
-        return (
-          data.permanentAddress.length > 0 &&
-          data.currentAddress.length > 0 &&
-          data.city.length > 0 &&
-          data.state.length > 0 &&
-          data.pinCode.length === 6 &&
-          data.bankName.length > 0 &&
-          data.accountNumber.length === 16 &&
-          data.ifscCode.length === 11 &&
-          data.branch.length > 0 &&
-          data.micrCode.length === 9
-        );
-      case 4:
-        return (
-          data.em1Name.length > 0 &&
-          data.em1Relation.length > 0 &&
-          data.em1Mobile.length === 10
-        );
-      default:
-        return false;
-    }
-  }, []);
-
-  const isCurrentStepValid = useMemo(
-    () => isStepValid(currentStep, formData),
-    [currentStep, formData, isStepValid],
-  );
-
   const handleNextStep = useCallback(() => {
+    // 1. Perform validation before any navigation call
+    if (!validateStep(currentStep)) {
+      return; 
+    }
+
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
       Animated.timing(slideAnim, {
@@ -97,7 +51,7 @@ export default function EmployeeDetailsScreen() {
     } else {
       handleFinalSubmit();
     }
-  }, [currentStep, stepWidth, slideAnim, formData]);
+  }, [currentStep, stepWidth, slideAnim, validateStep]);
 
   const handlePrevStep = useCallback(() => {
     if (currentStep > 1) {
@@ -170,11 +124,6 @@ export default function EmployeeDetailsScreen() {
 
         <ProgressIndicator currentStep={currentStep} totalSteps={TOTAL_STEPS} />
 
-        {/* 
-          Performance Optimization: 
-          All steps are pre-mounted side-by-side in a horizontal row.
-          This eliminates JS thread blocking, mounting delays, and blank screens. 
-        */}
         <View style={styles.sliderWrapper}>
           <Animated.View
             style={[
@@ -190,28 +139,31 @@ export default function EmployeeDetailsScreen() {
                 formData={formData}
                 updateField={updateField}
                 currentYear={currentYear}
-                onNextStep={handleNextStep} 
+                errors={errors} 
               />
             </View>
             <View style={{ width: stepWidth }}>
               <IdentityStep 
                 formData={formData} 
                 updateField={updateField} 
-                onNextStep={handleNextStep} 
+                errors={errors}
+                onNextStep={handleNextStep}
               />
             </View>
             <View style={{ width: stepWidth }}>
               <AddressBankStep 
                 formData={formData} 
                 updateField={updateField} 
-                onNextStep={handleNextStep} 
+                errors={errors}
+                onNextStep={handleNextStep}
               />
             </View>
             <View style={{ width: stepWidth }}>
               <EmergencyContactStep
                 formData={formData}
                 updateField={updateField}
-                onNextStep={handleNextStep} 
+                errors={errors}
+                onNextStep={handleNextStep}
               />
             </View>
           </Animated.View>
@@ -230,7 +182,6 @@ export default function EmployeeDetailsScreen() {
         <Button
           title="Continue"
           onPress={handleNextStep}
-          disabled={!isCurrentStepValid}
           style={styles.actionBtn}
         />
       </View>
@@ -249,7 +200,7 @@ const styles = StyleSheet.create({
   mainHeader: { marginBottom: spacing.xs },
   sliderWrapper: {
     flex: 1,
-    overflow: "hidden", // Prevents off-screen steps from bleeding outside the wrapper bounds
+    overflow: "hidden", 
   },
   stepsContainer: {
     flexDirection: "row",
