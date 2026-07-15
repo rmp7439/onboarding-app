@@ -1,6 +1,6 @@
 // Use local IP for Android emulator, localhost for iOS simulator
 const API_URL =
-  process.env.EXPO_PUBLIC_API_URL || "http://192.168.0.249:5000/api";
+  process.env.EXPO_PUBLIC_API_URL || "https://onboarding-backend-9uf0.onrender.com/api";
 
 export const api = {
   registerEmployee: async (employeeData: any) => {
