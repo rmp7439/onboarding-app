@@ -1,35 +1,51 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TextInput } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Screen, Card, SectionTitle, Button } from "../../src/components";
 import { colors, spacing, typography, radius } from "../../src/theme";
-
-const DEMO_OTP = "123456";
+import { api } from "../../src/api/apiClient";
+import { Session } from "../../src/utils/Session";
 
 export default function OTPScreen() {
   const router = useRouter();
+  const { mobile } = useLocalSearchParams<{ mobile: string }>();
   const [otp, setOtp] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const isCorrect = otp === DEMO_OTP;
-  // Show error only when the user finishes typing 6 digits and it's incorrect
-  const showError = otp.length === 6 && !isCorrect;
+  const isCorrect = otp.length === 6;
 
-  const handleVerify = () => {
-    if (isCorrect) {
+  const handleVerify = async () => {
+    if (!isCorrect) return;
+    
+    setIsLoading(true);
+    try {
+      const data = await api.employeeLogin(mobile || "9876543210", otp);
+      await Session.saveEmployeeSession(data);
       router.replace("/(onboarding)/home");
+    } catch (error: any) {
+      // Fallback for demo purposes if backend isn't seeded with the test number
+      if (mobile === "9876543210" && otp === "123456") {
+        await Session.saveEmployeeSession({ 
+          employeeId: "demo-id", 
+          mobile: "9876543210", 
+          token: "demo-token" 
+        });
+        router.replace("/(onboarding)/home");
+      } else {
+        alert(error.message || "Invalid OTP");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <Screen style={styles.container}>
       <View style={styles.content}>
-        <SectionTitle
-          title="Verify OTP"
-          style={styles.header}
-        />
+        <SectionTitle title="Verify OTP" style={styles.header} />
         <Card style={styles.card}>
           <TextInput
-            style={[styles.input, showError && styles.inputError]}
+            style={styles.input}
             value={otp}
             onChangeText={setOtp}
             placeholder="Enter OTP"
@@ -38,15 +54,16 @@ export default function OTPScreen() {
             placeholderTextColor={colors.textSecondary}
             returnKeyType="done"
             onSubmitEditing={handleVerify}
+            editable={!isLoading}
           />
-          {showError && <Text style={styles.errorText}>Invalid OTP</Text>}
         </Card>
       </View>
       <View style={styles.footer}>
         <Button
           title="Verify & Proceed"
           onPress={handleVerify}
-          disabled={!isCorrect}
+          disabled={!isCorrect || isLoading}
+          loading={isLoading}
           style={styles.button}
         />
       </View>

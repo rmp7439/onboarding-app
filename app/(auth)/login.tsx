@@ -4,29 +4,23 @@ import { useRouter } from "expo-router";
 import { Screen, Card, SectionTitle, Button } from "../../src/components";
 import { colors, spacing, typography, radius } from "../../src/theme";
 
-const DEMO_PHONE = "9876543210";
-
 export default function LoginScreen() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
 
-  const isCorrect = phone === DEMO_PHONE;
-  // Show error only when the user finishes typing 10 digits and it's incorrect
-  const showError = phone.length === 10 && !isCorrect;
+  const isCorrect = phone.length === 10;
+  const showError = phone.length > 0 && phone.length < 10;
 
   const handleContinue = () => {
     if (isCorrect) {
-      router.push("/otp");
+      router.push({ pathname: "/otp", params: { mobile: phone } });
     }
   };
 
   return (
     <Screen style={styles.container}>
       <View style={styles.content}>
-        <SectionTitle
-          title="Sign In"
-          style={styles.header}
-        />
+        <SectionTitle title="Sign In" style={styles.header} />
         <Card style={styles.card}>
           <TextInput
             style={[styles.input, showError && styles.inputError]}
@@ -39,9 +33,7 @@ export default function LoginScreen() {
             returnKeyType="done"
             onSubmitEditing={handleContinue}
           />
-          {showError && (
-            <Text style={styles.errorText}>Invalid Phone Number</Text>
-          )}
+          {showError && <Text style={styles.errorText}>Invalid Phone Number</Text>}
         </Card>
       </View>
       <View style={styles.footer}>

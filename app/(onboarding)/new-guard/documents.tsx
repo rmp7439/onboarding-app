@@ -22,6 +22,7 @@ import {
 import { DocumentItem } from "../../../src/types/Document";
 import { colors, spacing, typography, radius } from "../../../src/theme";
 import { IMAGE_QUALITY } from "../../../src/constants/App";
+import { RecentEmployeeStore } from "@/src/utils/RecentEmployeeStore";
 
 const INITIAL_DOCUMENTS: DocumentItem[] = [
   {
@@ -140,6 +141,8 @@ export default function DocumentsScreen() {
         const result = await api.registerEmployee(mappedData);
         empId = result.id;
         setRegisteredEmployeeId(empId);
+
+        await RecentEmployeeStore.saveId(result.id);
       }
 
       if (!isSelfieUploaded && data.selfieUri) {

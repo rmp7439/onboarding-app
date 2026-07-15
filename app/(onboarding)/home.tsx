@@ -1,12 +1,5 @@
 import React, { useState, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Animated,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { Screen, Card, SectionTitle } from "../../src/components";
 import { colors, spacing, typography } from "../../src/theme";
@@ -28,7 +21,7 @@ export default function HomeScreen() {
 
   const contentHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 192], // Increased from 128 to accommodate 3 items (64px each)
+    outputRange: [0, 192], // Height remains 192 for 3 items (64px each)
   });
 
   const iconRotation = animation.interpolate({
@@ -59,41 +52,28 @@ export default function HomeScreen() {
             ]}
           >
             <Pressable
-              style={({ pressed }) => [
-                styles.menuItem,
-                pressed && styles.menuItemPressed,
-              ]}
-              onPress={() =>
-                router.push("/(onboarding)/new-guard/employee-details")
-              }
+              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+              onPress={() => router.push("/(onboarding)/new-guard/employee-details")}
             >
               <Text style={styles.menuItemIcon}>📝</Text>
               <Text style={styles.menuItemText}>Register New Employee</Text>
             </Pressable>
 
-            {/* NEW: Employee Profiles Search Option */}
+            {/* REPLACED: View Current Employee Profile */}
             <Pressable
-              style={({ pressed }) => [
-                styles.menuItem,
-                pressed && styles.menuItemPressed,
-              ]}
-              onPress={() => router.push("/(onboarding)/profiles-search")}
+              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+              onPress={() => router.push("/(onboarding)/profile")}
             >
-              <Text style={styles.menuItemIcon}>🔍</Text>
-              <Text style={styles.menuItemText}>Employee Profiles</Text>
+              <Text style={styles.menuItemIcon}>👤</Text>
+              <Text style={styles.menuItemText}>View Current Employee Profile</Text>
             </Pressable>
 
             <Pressable
-              style={({ pressed }) => [
-                styles.menuItem,
-                pressed && styles.menuItemPressed,
-              ]}
+              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
               onPress={() => router.replace("/login")}
             >
               <Text style={styles.menuItemIcon}>🚪</Text>
-              <Text style={[styles.menuItemText, styles.logoutText]}>
-                Logout
-              </Text>
+              <Text style={[styles.menuItemText, styles.logoutText]}>Logout</Text>
             </Pressable>
           </Animated.View>
         </Card>
