@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, ScrollView, StyleSheet, ViewStyle, KeyboardAvoidingView, Platform, RefreshControlProps } from 'react-native';
 import { SafeAreaView, Edge } from 'react-native-safe-area-context';
-import { spacing } from '../../theme';
-import { useTheme } from '../../context/ThemeContext';
+import { colors, spacing } from '../../theme';
 
 export interface ScreenProps {
   children: React.ReactNode;
@@ -13,8 +12,6 @@ export interface ScreenProps {
 }
 
 export function Screen({ children, scrollable = true, style, safeAreaEdges = ['top', 'bottom', 'left', 'right'], refreshControl }: ScreenProps) {
-  const { colors } = useTheme();
-
   const content = scrollable ? (
     <ScrollView
       contentContainerStyle={[styles.scrollContent, style]}
@@ -30,7 +27,7 @@ export function Screen({ children, scrollable = true, style, safeAreaEdges = ['t
 
   return (
     <KeyboardAvoidingView
-      style={[styles.keyboardAvoid, { backgroundColor: colors.background }]}
+      style={styles.keyboardAvoid}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <SafeAreaView edges={safeAreaEdges} style={styles.safeArea}>
@@ -41,7 +38,7 @@ export function Screen({ children, scrollable = true, style, safeAreaEdges = ['t
 }
 
 const styles = StyleSheet.create({
-  keyboardAvoid: { flex: 1 },
+  keyboardAvoid: { flex: 1, backgroundColor: colors.background },
   safeArea: { flex: 1 },
   scrollContent: { flexGrow: 1, padding: spacing.md },
   nonScrollContent: { flex: 1, padding: spacing.md },
