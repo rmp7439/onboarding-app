@@ -17,6 +17,7 @@ import { EmergencyContactStep } from "../../../src/components/onboarding/steps/E
 import { useOnboarding } from "../../../src/context/OnboardingContext";
 import { useEmployeeForm } from "../../../src/hooks/useEmployeeForm";
 import { colors, spacing } from "../../../src/theme";
+import { lightImpact, warning } from "../../../src/utils/haptics";
 
 const TOTAL_STEPS = 4;
 
@@ -24,10 +25,8 @@ export default function EmployeeDetailsScreen() {
   const router = useRouter();
   const { updateData } = useOnboarding();
   
-  // Cleaned up duplicate declarations - everything is imported here once
   const { formData, updateField, errors, validateStep } = useEmployeeForm();
 
-  // Layout measurements for the smooth horizontal slide
   const { width } = useWindowDimensions();
   const stepWidth = width - spacing.md * 2;
 
@@ -36,10 +35,12 @@ export default function EmployeeDetailsScreen() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   const handleNextStep = useCallback(() => {
-    // 1. Perform validation before any navigation call
     if (!validateStep(currentStep)) {
+      warning();
       return; 
     }
+    
+    lightImpact();
 
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
@@ -55,6 +56,7 @@ export default function EmployeeDetailsScreen() {
 
   const handlePrevStep = useCallback(() => {
     if (currentStep > 1) {
+      lightImpact();
       setCurrentStep(currentStep - 1);
       Animated.timing(slideAnim, {
         toValue: -(currentStep - 2) * stepWidth,

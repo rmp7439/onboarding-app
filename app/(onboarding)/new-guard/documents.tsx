@@ -23,6 +23,7 @@ import { DocumentItem } from "../../../src/types/Document";
 import { colors, spacing, typography, radius } from "../../../src/theme";
 import { IMAGE_QUALITY } from "../../../src/constants/App";
 import { RecentEmployeeStore } from "@/src/utils/RecentEmployeeStore";
+import { lightImpact, success, error as errorHaptic } from "../../../src/utils/haptics";
 
 const INITIAL_DOCUMENTS: DocumentItem[] = [
   {
@@ -87,7 +88,7 @@ export default function DocumentsScreen() {
 
   const handlePickImage = async (id: string, source: "gallery" | "camera") => {
     try {
-      setErrorText(null); // Clear previous errors
+      setErrorText(null); 
       let result;
       if (source === "gallery") {
         result = await ImagePicker.launchImageLibraryAsync({
@@ -110,12 +111,12 @@ export default function DocumentsScreen() {
         );
       }
     } catch (error: any) {
-      // TASK 9: Replace Alert.alert with consistent UI banner
       setErrorText(error.message || "Failed to access media. Please check permissions.");
     }
   };
 
   const handleRemove = (id: string) => {
+    lightImpact();
     setDocuments((prev) =>
       prev.map((doc) =>
         doc.id === id ? { ...doc, uri: null, filename: null } : doc,
@@ -126,6 +127,7 @@ export default function DocumentsScreen() {
   const handleSubmit = async () => {
     if (isSubmitting) return;
 
+    lightImpact();
     setIsSubmitting(true);
     setErrorText(null);
 
@@ -160,17 +162,18 @@ export default function DocumentsScreen() {
       const finalDocNames = docsToUpload.map((doc) => doc.title);
       updateData({ uploadedDocuments: finalDocNames });
 
+      success();
       router.push("/(onboarding)/new-guard/success");
     } catch (error: any) {
+      errorHaptic();
       setErrorText(
         error.message ||
           "An unexpected error occurred during the upload process.",
       );
-      setIsSubmitting(false); // Only toggle back to false if there's an error
+      setIsSubmitting(false); 
     }
   };
 
-  // --- NEW LOADING SCREEN UI ---
   if (isSubmitting) {
     return (
       <Screen style={styles.loadingScreen} scrollable={false}>
@@ -226,12 +229,13 @@ export default function DocumentsScreen() {
               title="Upload"
               variant="outline"
               disabled={isSubmitting}
-              onPress={() =>
+              onPress={() => {
+                lightImpact();
                 openPicker(
                   () => handlePickImage(doc.id, "camera"),
                   () => handlePickImage(doc.id, "gallery"),
-                )
-              }
+                );
+              }}
               style={styles.actionButton}
             />
           </View>
@@ -258,12 +262,13 @@ export default function DocumentsScreen() {
                 title="Replace"
                 variant="outline"
                 disabled={isSubmitting}
-                onPress={() =>
+                onPress={() => {
+                  lightImpact();
                   openPicker(
                     () => handlePickImage(doc.id, "camera"),
                     () => handlePickImage(doc.id, "gallery"),
-                  )
-                }
+                  );
+                }}
                 style={styles.halfBtn}
               />
               <View style={styles.actionSpacer} />
@@ -424,7 +429,6 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.medium,
   },
 
-  // --- NEW LOADING UI STYLES ---
   loadingScreen: {
     flex: 1,
     justifyContent: "center",

@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Card, Screen, SectionTitle } from "../../src/components";
 import { colors, radius, spacing, typography } from "../../src/theme";
+import { lightImpact } from "../../src/utils/haptics";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function HomeScreen() {
   const animation = useRef(new Animated.Value(1)).current;
 
   const toggleOperations = () => {
+    lightImpact();
     const toValue = isOperationsExpanded ? 0 : 1;
     setIsOperationsExpanded(!isOperationsExpanded);
     Animated.timing(animation, {
@@ -27,7 +29,7 @@ export default function HomeScreen() {
 
   const contentHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 192], // Restored to 192 for 3 menu items
+    outputRange: [0, 192], 
   });
 
   const iconRotation = animation.interpolate({
@@ -62,9 +64,10 @@ export default function HomeScreen() {
                 styles.menuItem,
                 pressed && styles.menuItemPressed,
               ]}
-              onPress={() =>
-                router.push("/(onboarding)/new-guard/employee-details")
-              }
+              onPress={() => {
+                lightImpact();
+                router.push("/(onboarding)/new-guard/employee-details");
+              }}
             >
               <Text style={styles.menuItemIcon}>📝</Text>
               <Text style={styles.menuItemText}>Register New Employee</Text>
@@ -75,7 +78,10 @@ export default function HomeScreen() {
                 styles.menuItem,
                 pressed && styles.menuItemPressed,
               ]}
-              onPress={() => router.push("/(onboarding)/profile")}
+              onPress={() => {
+                lightImpact();
+                router.push("/(onboarding)/profile");
+              }}
             >
               <Text style={styles.menuItemIcon}>👤</Text>
               <Text style={styles.menuItemText}>
@@ -88,7 +94,10 @@ export default function HomeScreen() {
                 styles.menuItem,
                 pressed && styles.menuItemPressed,
               ]}
-              onPress={() => router.replace("/login")}
+              onPress={() => {
+                lightImpact();
+                router.replace("/login");
+              }}
             >
               <Text style={styles.menuItemIcon}>🚪</Text>
               <Text style={[styles.menuItemText, styles.logoutText]}>

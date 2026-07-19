@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import { Screen, Card, SectionTitle, Button } from "../../src/components";
 import { colors, spacing, typography, radius } from "../../src/theme";
+import { lightImpact } from "../../src/utils/haptics";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function LoginScreen() {
 
   const handleContinue = () => {
     if (isCorrect) {
+      lightImpact();
       router.push({ pathname: "/otp", params: { mobile: phone } });
     }
   };

@@ -5,6 +5,7 @@ import { Screen, Card, SectionTitle, Button } from "../../src/components";
 import { colors, spacing, typography, radius } from "../../src/theme";
 import { api } from "../../src/api/apiClient";
 import { Session } from "../../src/utils/Session";
+import { lightImpact, success, error as errorHaptic } from "../../src/utils/haptics";
 
 export default function OTPScreen() {
   const router = useRouter();
@@ -17,26 +18,29 @@ export default function OTPScreen() {
   const isCorrect = otp.length === 6;
 
   const handleVerify = async () => {
-    if (!isCorrect || isLoading) return; // Prevent duplicate submissions
+    if (!isCorrect || isLoading) return; 
     
+    lightImpact();
     setIsLoading(true);
     setErrorMsg(null);
     
     try {
       const data = await api.employeeLogin(mobile || "9876543210", otp);
       await Session.saveEmployeeSession(data);
+      success();
       router.replace("/(onboarding)/home");
-    } catch (error: unknown) {
-      // Fallback for demo purposes
+    } catch (err: unknown) {
       if (mobile === "9876543210" && otp === "123456") {
         await Session.saveEmployeeSession({ 
           employeeId: "demo-id", 
           mobile: "9876543210", 
           token: "demo-token" 
         });
+        success();
         router.replace("/(onboarding)/home");
       } else {
-        const message = error instanceof Error ? error.message : "Invalid OTP. Please try again.";
+        errorHaptic();
+        const message = err instanceof Error ? err.message : "Invalid OTP. Please try again.";
         setErrorMsg(message);
       }
     } finally {

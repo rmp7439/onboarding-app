@@ -17,6 +17,7 @@ import { colors, spacing, typography, radius } from "../../../src/theme";
 import { useOnboarding } from "../../../src/context/OnboardingContext";
 import { ANIMATION } from "../../../src/constants/Animation";
 import { IMAGE_QUALITY } from "../../../src/constants/App";
+import { lightImpact, mediumImpact } from "../../../src/utils/haptics";
 
 export default function CapturePhotoScreen() {
   const router = useRouter();
@@ -27,7 +28,6 @@ export default function CapturePhotoScreen() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
 
-  // Dynamic layout states for perfect cropping
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [guideTop, setGuideTop] = useState(0);
 
@@ -35,6 +35,8 @@ export default function CapturePhotoScreen() {
 
   const handleCapture = async () => {
     if (!cameraRef.current || isCapturing) return;
+    
+    mediumImpact();
     setIsCapturing(true);
 
     Animated.sequence([
@@ -73,23 +75,18 @@ export default function CapturePhotoScreen() {
         const offsetY = (displayedHeight - screenHeight) / 2;
         const guideLeft = (screenWidth - 280) / 2;
 
-        // 1. Find the center of the visual guide on the screen
         const guideCenterX = guideLeft + (280 / 2);
         const guideCenterY = guideTop + (280 / 2);
 
-        // 2. Define the square size needed to fully encompass the 280x380 guide
         const squareSize = 280;
         const halfSquare = squareSize / 2;
 
-        // 3. Calculate the top-left coordinates of this square on the screen
         const squareLeft = guideCenterX - halfSquare;
         const squareTop = guideCenterY - halfSquare;
 
-        // 4. Map the screen square coordinates to the raw photo resolution
         const cropX = Math.max(0, Math.floor((squareLeft + offsetX) / scale));
         const cropY = Math.max(0, Math.floor((squareTop + offsetY) / scale));
         
-        // 5. Ensure the final crop is a perfect square and doesn't exceed photo boundaries
         const targetCropSize = Math.floor(squareSize / scale);
         const cropSize = Math.min(
           targetCropSize, 
@@ -99,7 +96,6 @@ export default function CapturePhotoScreen() {
 
         const manipResult = await manipulateAsync(
           photoData.uri,
-          // Use the single cropSize for both width and height to guarantee a 1:1 image
           [{ crop: { originX: cropX, originY: cropY, width: cropSize, height: cropSize } }],
           { compress: IMAGE_QUALITY, format: SaveFormat.JPEG }
         );
@@ -115,6 +111,7 @@ export default function CapturePhotoScreen() {
 
   const handleContinue = () => {
     if (photo) {
+      lightImpact();
       updateData({ selfieUri: photo });
       router.push("/(onboarding)/new-guard/documents");
     }
@@ -152,7 +149,6 @@ export default function CapturePhotoScreen() {
         <View style={styles.content}>
           <SectionTitle title="Review Photo" style={styles.header} />
           <Card style={styles.previewCard}>
-            {/* The preview will now natively fit the cropped face nicely */}
             <View style={styles.capturedPlaceholder}>
               <Image
                 source={{ uri: photo }}
@@ -172,7 +168,10 @@ export default function CapturePhotoScreen() {
           <Button
             title="Retake"
             variant="outline"
-            onPress={() => setPhoto(null)}
+            onPress={() => {
+              lightImpact();
+              setPhoto(null);
+            }}
             style={[styles.fullButton, styles.secondaryButton]}
           />
         </View>
@@ -198,7 +197,6 @@ export default function CapturePhotoScreen() {
 
         <View
           style={styles.faceGuideContainer}
-          // Extracts the exact Y-position of the face guide relative to the screen on load
           onLayout={(e) => {
             const { y, height } = e.nativeEvent.layout;
             setGuideTop(y + (height - 280) / 2);

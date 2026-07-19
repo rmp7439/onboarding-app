@@ -5,6 +5,7 @@ import { Screen, Card, SectionTitle, Button } from "../../src/components";
 import { colors, spacing, typography, radius } from "../../src/theme";
 import { api } from "../../src/api/apiClient";
 import { RecentEmployeeStore } from "../../src/utils/RecentEmployeeStore";
+import { lightImpact } from "../../src/utils/haptics";
 
 interface EmployeeProfile {
   id: string;
@@ -95,7 +96,10 @@ export default function ProfileScreen() {
           <Text style={styles.emptySubtitle}>Register an employee to view their profile.</Text>
           <Button
             title="Back to Dashboard"
-            onPress={() => router.back()}
+            onPress={() => {
+              lightImpact();
+              router.back();
+            }}
             style={styles.retryButton}
           />
         </View>
@@ -110,7 +114,10 @@ export default function ProfileScreen() {
         <Text style={styles.errorText}>{error}</Text>
         <Button
           title="Back to Dashboard"
-          onPress={() => router.back()}
+          onPress={() => {
+            lightImpact();
+            router.back();
+          }}
           style={styles.retryButton}
         />
       </View>
@@ -155,7 +162,6 @@ export default function ProfileScreen() {
         </View>
       </Card>
 
-      {/* Conditionally rendered Rejection Card */}
       {profile.status.toUpperCase() === "REJECTED" && profile.rejectReason ? (
         <Card style={[styles.detailsCard, styles.rejectionCard]}>
           <Text style={styles.rejectionTitle}>Application Rejected</Text>
@@ -194,7 +200,10 @@ export default function ProfileScreen() {
         <Button
           title="Back to Dashboard"
           variant="outline"
-          onPress={() => router.back()}
+          onPress={() => {
+            lightImpact();
+            router.back();
+          }}
         />
       </View>
     </Screen>
@@ -290,7 +299,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Styles for conditional rejection component
   rejectionCard: {
     borderColor: colors.error,
     backgroundColor: "#FEF2F2",

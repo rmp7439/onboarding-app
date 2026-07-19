@@ -4,22 +4,21 @@ import { useRouter } from "expo-router";
 import { Screen, Card, Button } from "../../../src/components";
 import { colors, spacing, typography, radius } from "../../../src/theme";
 import { useOnboarding } from "../../../src/context/OnboardingContext";
+import { lightImpact } from "../../../src/utils/haptics";
 
 export default function SuccessScreen() {
   const router = useRouter();
   const { resetData } = useOnboarding();
 
   const handleRegisterAnother = () => {
-    // 1. Purge the context state of the employee just registered
+    lightImpact();
     resetData();
-    // 2. Start a fresh registration by replacing the success screen in the stack
     router.replace("/(onboarding)/new-guard/employee-details");
   };
 
   const handleGoToDashboard = () => {
-    // 1. Purge the context state
+    lightImpact();
     resetData();
-    // 2. Navigate cleanly back to the manager's dashboard
     router.replace("/(onboarding)/home");
   };
 
@@ -43,7 +42,6 @@ export default function SuccessScreen() {
         <Card style={styles.detailsCard}>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Registration ID</Text>
-            {/* Note: This is currently hardcoded but preserves existing UI */}
             <Text style={styles.detailValue}>EMP-2026-001</Text>
           </View>
           <View style={styles.divider} />
@@ -71,7 +69,6 @@ export default function SuccessScreen() {
   );
 }
 
-// ... styles remain completely unchanged ...
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: {
