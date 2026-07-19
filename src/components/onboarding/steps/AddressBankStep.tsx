@@ -34,7 +34,7 @@ export function AddressBankStep({ formData, updateField, onNextStep, errors }: S
           multiline 
           returnKeyType="next"
           onSubmitEditing={() => currAddressRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         <Input 
           ref={currAddressRef}
@@ -45,7 +45,7 @@ export function AddressBankStep({ formData, updateField, onNextStep, errors }: S
           multiline 
           returnKeyType="next"
           onSubmitEditing={() => cityRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         <Input 
           ref={cityRef}
@@ -55,7 +55,7 @@ export function AddressBankStep({ formData, updateField, onNextStep, errors }: S
           onChangeText={(text) => { if (isValidNameInput(text)) updateField('city', text); }} 
           returnKeyType="next"
           onSubmitEditing={() => stateRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         <Input 
           ref={stateRef}
@@ -65,7 +65,7 @@ export function AddressBankStep({ formData, updateField, onNextStep, errors }: S
           onChangeText={(text) => { if (isValidNameInput(text)) updateField('state', text); }} 
           returnKeyType="next"
           onSubmitEditing={() => pinCodeRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         <Input 
           ref={pinCodeRef}
@@ -77,7 +77,7 @@ export function AddressBankStep({ formData, updateField, onNextStep, errors }: S
           maxLength={6} 
           returnKeyType="next"
           onSubmitEditing={() => bankNameRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
       </FormSection>
 
@@ -90,7 +90,7 @@ export function AddressBankStep({ formData, updateField, onNextStep, errors }: S
           onChangeText={(text) => { if (isValidNameInput(text)) updateField('bankName', text); }} 
           returnKeyType="next"
           onSubmitEditing={() => accNumRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         <SegmentedInput
           ref={accNumRef}
@@ -126,7 +126,7 @@ export function AddressBankStep({ formData, updateField, onNextStep, errors }: S
           onChangeText={(text) => { if (isValidAddressInput(text)) updateField('branch', text); }} 
           returnKeyType="next"
           onSubmitEditing={() => micrRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         <SegmentedInput
           ref={micrRef}

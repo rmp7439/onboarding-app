@@ -49,7 +49,7 @@ export function EmploymentPersonalStep({
           placeholder="Enter unit or site"
           returnKeyType="next"
           onSubmitEditing={() => firstNameRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
       </FormSection>
 
@@ -62,7 +62,7 @@ export function EmploymentPersonalStep({
           onChangeText={(text) => { if (isValidNameInput(text)) updateField("firstName", text); }}
           returnKeyType="next"
           onSubmitEditing={() => surnameRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         <Input
           ref={surnameRef}
@@ -72,7 +72,7 @@ export function EmploymentPersonalStep({
           onChangeText={(text) => { if (isValidNameInput(text)) updateField("surname", text); }}
           returnKeyType="next"
           onSubmitEditing={() => fatherNameRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         <Input
           ref={fatherNameRef}
@@ -87,7 +87,6 @@ export function EmploymentPersonalStep({
           value={formData.gender}
           onChange={(val) => updateField("gender", val)}
         />
-        {/* Hidden input hack to display validation error for GenderSelector */}
         {errors.gender && <Input label="" value="" error={errors.gender} editable={false} style={{display: 'none'}} />}
 
         <Input
@@ -99,7 +98,7 @@ export function EmploymentPersonalStep({
           editable={formData.gender === "Female"}
           returnKeyType="next"
           onSubmitEditing={() => mobileNumberRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
 
         <DateInput
@@ -126,7 +125,6 @@ export function EmploymentPersonalStep({
           value={formData.bloodGroup}
           onChange={(val) => updateField("bloodGroup", val)}
         />
-        {/* Hidden input hack to display validation error for BloodGroupSelector */}
         {errors.bloodGroup && <Input label="" value="" error={errors.bloodGroup} editable={false} style={{display: 'none'}} />}
       </FormSection>
     </View>

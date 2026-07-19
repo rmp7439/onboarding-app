@@ -4,8 +4,7 @@ import {
   Text, 
   TextInput, 
   StyleSheet, 
-  NativeSyntheticEvent, 
-  TextInputKeyPressEventData 
+  NativeSyntheticEvent
 } from 'react-native';
 import { colors, spacing, radius, typography } from '../../theme';
 
@@ -162,14 +161,13 @@ export function DateInput({
     onChange(`${day}/${month}/${cleanText}`);
   };
 
-  // --- Natural Backspacing ---
-  const handleMonthKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+  const handleMonthKeyPress = (e: NativeSyntheticEvent<{ key: string }>) => {
     if (e.nativeEvent.key === 'Backspace' && month === '') {
       dayRef.current?.focus();
     }
   };
 
-  const handleYearKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+  const handleYearKeyPress = (e: NativeSyntheticEvent<{ key: string }>) => {
     if (e.nativeEvent.key === 'Backspace' && year === '') {
       monthRef.current?.focus();
     }

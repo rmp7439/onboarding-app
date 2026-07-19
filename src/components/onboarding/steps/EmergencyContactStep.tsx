@@ -25,7 +25,7 @@ export function EmergencyContactStep({ formData, updateField, onNextStep, errors
           onChangeText={(text) => updateField('em1Name', text)} 
           returnKeyType="next"
           onSubmitEditing={() => relationRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         <Input 
           ref={relationRef}
@@ -35,7 +35,7 @@ export function EmergencyContactStep({ formData, updateField, onNextStep, errors
           onChangeText={(text) => updateField('em1Relation', text)} 
           returnKeyType="next"
           onSubmitEditing={() => mobileRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         <Input 
           ref={mobileRef}

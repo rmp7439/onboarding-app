@@ -28,7 +28,7 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           maxLength={15}
           returnKeyType="next"
           onSubmitEditing={() => panRef.current?.focus()}
-          blurOnSubmit={false}
+          submitBehavior="submit"
         />
         
         <SegmentedInput

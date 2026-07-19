@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Image,
-  Alert,
   ScrollView,
   Platform,
   ActivityIndicator,

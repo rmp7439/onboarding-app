@@ -1,22 +1,22 @@
-import React, { useState, useRef } from "react";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import { useRouter } from "expo-router";
+import React, { useRef, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
   Animated,
   Image,
+  Pressable,
+  StyleSheet,
+  Text,
   useWindowDimensions,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { CameraView, useCameraPermissions } from "expo-camera";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
-import { Screen, SectionTitle, Button, Card } from "../../../src/components";
-import { colors, spacing, typography, radius } from "../../../src/theme";
-import { useOnboarding } from "../../../src/context/OnboardingContext";
+import { Button, Card, Screen, SectionTitle } from "../../../src/components";
 import { ANIMATION } from "../../../src/constants/Animation";
 import { IMAGE_QUALITY } from "../../../src/constants/App";
+import { useOnboarding } from "../../../src/context/OnboardingContext";
+import { colors, radius, spacing, typography } from "../../../src/theme";
 import { lightImpact, mediumImpact } from "../../../src/utils/haptics";
 
 export default function CapturePhotoScreen() {
@@ -35,7 +35,7 @@ export default function CapturePhotoScreen() {
 
   const handleCapture = async () => {
     if (!cameraRef.current || isCapturing) return;
-    
+
     mediumImpact();
     setIsCapturing(true);
 
@@ -67,7 +67,10 @@ export default function CapturePhotoScreen() {
           photoHeight = photoData.width;
         }
 
-        const scale = Math.max(screenWidth / photoWidth, screenHeight / photoHeight);
+        const scale = Math.max(
+          screenWidth / photoWidth,
+          screenHeight / photoHeight,
+        );
         const displayedWidth = photoWidth * scale;
         const displayedHeight = photoHeight * scale;
 
@@ -75,8 +78,8 @@ export default function CapturePhotoScreen() {
         const offsetY = (displayedHeight - screenHeight) / 2;
         const guideLeft = (screenWidth - 280) / 2;
 
-        const guideCenterX = guideLeft + (280 / 2);
-        const guideCenterY = guideTop + (280 / 2);
+        const guideCenterX = guideLeft + 280 / 2;
+        const guideCenterY = guideTop + 280 / 2;
 
         const squareSize = 280;
         const halfSquare = squareSize / 2;
@@ -86,19 +89,27 @@ export default function CapturePhotoScreen() {
 
         const cropX = Math.max(0, Math.floor((squareLeft + offsetX) / scale));
         const cropY = Math.max(0, Math.floor((squareTop + offsetY) / scale));
-        
+
         const targetCropSize = Math.floor(squareSize / scale);
         const cropSize = Math.min(
-          targetCropSize, 
-          photoData.width - cropX, 
-          photoData.height - cropY
+          targetCropSize,
+          photoData.width - cropX,
+          photoData.height - cropY,
         );
 
-        const manipResult = await manipulateAsync(
-          photoData.uri,
-          [{ crop: { originX: cropX, originY: cropY, width: cropSize, height: cropSize } }],
-          { compress: IMAGE_QUALITY, format: SaveFormat.JPEG }
-        );
+        const image = await ImageManipulator.manipulate(photoData.uri)
+          .crop({
+            originX: cropX,
+            originY: cropY,
+            width: cropSize,
+            height: cropSize,
+          })
+          .renderAsync();
+
+        const manipResult = await image.saveAsync({
+          compress: IMAGE_QUALITY,
+          format: SaveFormat.JPEG,
+        });
 
         setPhoto(manipResult.uri);
       }
