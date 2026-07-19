@@ -12,6 +12,7 @@ interface EmployeeProfile {
   surname: string;
   employeeCode: string | null;
   status: string;
+  rejectReason: string | null;
   mobile: string;
   joiningDate: string;
   gender: string;
@@ -159,6 +160,13 @@ export default function ProfileScreen() {
         </View>
       </Card>
 
+      {profile.status.toUpperCase() === "REJECTED" && profile.rejectReason && (
+        <Card style={[styles.detailsCard, styles.rejectionCard]}>
+          <Text style={styles.rejectionTitle}>Application Rejected</Text>
+          <Text style={styles.rejectionBody}>{profile.rejectReason}</Text>
+        </Card>
+      )}
+
       {/* Details Card: Strictly limited to non-sensitive fields */}
       <Card style={styles.detailsCard}>
         <View style={styles.detailRow}>
@@ -305,4 +313,20 @@ const styles = StyleSheet.create({
   },
   divider: { height: 1, backgroundColor: colors.border, opacity: 0.3 },
   footer: { paddingBottom: spacing.xl },
+  rejectionCard: {
+    borderColor: colors.error,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+  },
+  rejectionTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.error,
+    marginBottom: spacing.xs,
+  },
+  rejectionBody: {
+    fontSize: typography.fontSize.md,
+    color: colors.error,
+    lineHeight: typography.lineHeight.md,
+  },
 });
