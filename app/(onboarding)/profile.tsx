@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, Image } from "react-native";
-import { useRouter, useFocusEffect } from "expo-router";
-import { Screen, Card, SectionTitle, Button } from "../../src/components";
-import { colors, spacing, typography, radius } from "../../src/theme";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 import { api } from "../../src/api/apiClient";
+import { Button, Card, Screen, SectionTitle } from "../../src/components";
+import { colors, radius, spacing, typography } from "../../src/theme";
 import { RecentEmployeeStore } from "../../src/utils/RecentEmployeeStore";
 import { lightImpact } from "../../src/utils/haptics";
 
@@ -34,9 +34,9 @@ export default function ProfileScreen() {
       setIsLoading(true);
       setError(null);
       setIsEmpty(false);
-      
+
       const recentId = await RecentEmployeeStore.getId();
-      
+
       if (!recentId) {
         setIsEmpty(true);
         setIsLoading(false);
@@ -54,8 +54,32 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchProfile();
-    }, [fetchProfile])
+      let isActive = true;
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+      const executePoll = async () => {
+        if (!isActive) return;
+
+        await fetchProfile();
+
+        // Schedule the next poll only after the current request finishes
+        // to completely prevent overlapping requests on slow networks.
+        if (isActive) {
+          timeoutId = setTimeout(executePoll, 5000);
+        }
+      };
+
+      // Start the polling cycle
+      executePoll();
+
+      return () => {
+        // Cleanup immediately when screen loses focus
+        isActive = false;
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      };
+    }, [fetchProfile]),
   );
 
   const getStatusBadgeStyle = (status: string) => {
@@ -92,8 +116,12 @@ export default function ProfileScreen() {
     return (
       <Screen style={styles.container}>
         <View style={styles.centerContainer}>
-          <Text style={styles.emptyTitle}>No employee has been registered yet.</Text>
-          <Text style={styles.emptySubtitle}>Register an employee to view their profile.</Text>
+          <Text style={styles.emptyTitle}>
+            No employee has been registered yet.
+          </Text>
+          <Text style={styles.emptySubtitle}>
+            Register an employee to view their profile.
+          </Text>
           <Button
             title="Back to Dashboard"
             onPress={() => {
