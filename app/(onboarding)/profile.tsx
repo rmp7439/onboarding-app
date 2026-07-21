@@ -9,6 +9,7 @@ import { lightImpact } from "../../src/utils/haptics";
 import { useOnboarding } from "../../src/context/OnboardingContext";
 import { formatDateForForm, mapBloodGroupFromBackend } from "../../src/utils/dataMappers";
 
+// Extended interface to capture all possible backend fields
 interface EmployeeProfile {
   id: string;
   firstName: string;
@@ -161,12 +162,14 @@ export default function ProfileScreen() {
   const handleEditResubmit = () => {
     if (!profile) return;
     lightImpact();
+    
+    // Map existing profile directly into context to pre-fill the multi-step form
     updateData({
       isEditMode: true,
       editEmployeeId: profile.id,
       employment: {
         joiningDate: formatDateForForm(profile.joiningDate || ""),
-        unit: "",
+        unit: "", // Assuming unit remains blank if not fetched
       },
       personal: {
         firstName: profile.firstName || "",
@@ -298,8 +301,12 @@ export default function ProfileScreen() {
 
       {isReturned && profile.correctionRemark ? (
         <Card style={[styles.detailsCard, styles.returnedCard]}>
-          <Text style={styles.returnedTitle}>Correction Required</Text>
-          <Text style={styles.returnedBody}>{profile.correctionRemark}</Text>
+          <Text style={styles.returnedTitle}>Action Required</Text>
+          <Text style={styles.returnedBody}>Your application has been returned for correction.</Text>
+          <View style={styles.reasonContainer}>
+            <Text style={styles.reasonLabel}>Reason</Text>
+            <Text style={styles.reasonText}>{profile.correctionRemark}</Text>
+          </View>
         </Card>
       ) : profile.status.toUpperCase() === "REJECTED" && profile.rejectReason ? (
         <Card style={[styles.detailsCard, styles.rejectionCard]}>
@@ -340,7 +347,7 @@ export default function ProfileScreen() {
           <Button
             title="Edit & Resubmit"
             onPress={handleEditResubmit}
-            style={{ marginBottom: spacing.md }}
+            style={styles.primaryButton}
           />
         )}
         <Button
@@ -475,7 +482,27 @@ const styles = StyleSheet.create({
   },
   returnedBody: {
     fontSize: typography.fontSize.md,
+    color: "#B45309",
+    marginBottom: spacing.md,
+  },
+  reasonContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: "rgba(217, 119, 6, 0.2)"
+  },
+  reasonLabel: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
     color: "#D97706",
+    marginBottom: spacing.xs,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  reasonText: {
+    fontSize: typography.fontSize.md,
+    color: "#92400E",
     lineHeight: typography.lineHeight.md,
   },
 
@@ -497,4 +524,5 @@ const styles = StyleSheet.create({
   },
   divider: { height: 1, backgroundColor: colors.border, opacity: 0.3 },
   footer: { paddingBottom: spacing.xl },
+  primaryButton: { marginBottom: spacing.md },
 });

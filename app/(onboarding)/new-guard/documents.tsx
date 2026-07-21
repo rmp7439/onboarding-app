@@ -48,6 +48,7 @@ export default function DocumentsScreen() {
   const [isSelfieUploaded, setIsSelfieUploaded] = useState(false);
   const [completedDocUploads, setCompletedDocUploads] = useState<string[]>([]);
 
+  // Identify pre-existing documents on load if we are editing an application
   useEffect(() => {
     if (data.isEditMode && data.existingDocuments && data.existingDocuments.length > 0) {
       const backendToFrontendMap: Record<string, string> = {
@@ -59,6 +60,7 @@ export default function DocumentsScreen() {
         'VOTER_ID': 'voter',
         'DISCHARGE_BOOK': 'discharge'
       };
+      
       const existingIds = data.existingDocuments.map(type => backendToFrontendMap[type]);
       
       setDocuments(prev => prev.map(doc => 
@@ -120,6 +122,7 @@ export default function DocumentsScreen() {
       if (data.isEditMode && data.editEmployeeId) {
         empId = data.editEmployeeId;
         const mappedData = mapEmployeeData(data);
+        // Call the PUT endpoint instead of POST
         await api.updateEmployee(empId, mappedData);
       } else {
         if (!empId) {
@@ -131,6 +134,7 @@ export default function DocumentsScreen() {
         }
       }
 
+      // Check against "EXISTING" flag to avoid trying to re-upload previously attached documents
       if (data.selfieUri && data.selfieUri !== "EXISTING" && !isSelfieUploaded) {
         await api.uploadSelfie(empId!, data.selfieUri);
         setIsSelfieUploaded(true);

@@ -7,6 +7,7 @@ export interface EmergencyContact {
 }
 
 export interface OnboardingData {
+  // NEW: State to track if we are editing an existing profile
   isEditMode: boolean;
   editEmployeeId: string | null;
   existingDocuments: string[];

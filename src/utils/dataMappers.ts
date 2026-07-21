@@ -10,6 +10,7 @@ export const mapBloodGroup = (bg: string): string => {
   return map[bg] || "O_POSITIVE";
 };
 
+// NEW: Map backend blood group back to form UI format
 export const mapBloodGroupFromBackend = (bg: string): string => {
   const map: Record<string, string> = {
     "A_POSITIVE": "A+", "A_NEGATIVE": "A-", 
@@ -25,6 +26,7 @@ export const parseDateString = (dateStr: string): string => {
   return new Date(`${year}-${month}-${day}T00:00:00.000Z`).toISOString();
 };
 
+// NEW: Safely convert ISO date to DD/MM/YYYY for the form input
 export const formatDateForForm = (isoString: string): string => {
   if (!isoString) return "";
   const date = new Date(isoString);

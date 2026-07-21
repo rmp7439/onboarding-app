@@ -48,6 +48,7 @@ export const api = {
     });
   },
 
+  // NEW: Update employee endpoint
   updateEmployee: (id: string, employeeData: any) => {
     return safeRequest(`/employee/${id}`, {
       method: "PUT",
