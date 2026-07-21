@@ -43,47 +43,38 @@ export default function HomeScreen() {
   const handleEditApplication = async () => {
     lightImpact();
     setIsFetchingEdit(true);
-
+    
     try {
       const recentId = await RecentEmployeeStore.getId();
       if (!recentId) {
-        Alert.alert(
-          "Notice",
-          "You have no applications available for editing.",
-        );
+        Alert.alert("Notice", "You have no applications available for editing.");
         setIsFetchingEdit(false);
         return;
       }
-
+      
       const profile = await api.getEmployeeProfile(recentId);
-
-      // Access Control: Only RETURNED or REJECTED
-      if (
-        profile.status !== "RETURNED_FOR_CORRECTION" &&
-        profile.status !== "REJECTED"
-      ) {
-        Alert.alert(
-          "Notice",
-          "You have no applications available for editing.",
-        );
+      
+      if (profile.status !== 'RETURNED_FOR_CORRECTION' && profile.status !== 'REJECTED') {
+        Alert.alert("Notice", "You have no applications available for editing.");
         setIsFetchingEdit(false);
         return;
       }
 
-      // Prefill Context with FULL data payload mapped properly
+      // Pre-fill Context. Because the backend now sends the FULL object,
+      // ALL fields including Aadhaar, PAN, Bank, and Unit will be populated perfectly.
       updateData({
         isEditMode: true,
         editEmployeeId: profile.id,
         employment: {
           joiningDate: formatDateForForm(profile.joiningDate),
-          unit: "", // Local non-persisted field
+          unit: profile.unit || "", // FIX: Populate from backend
         },
         personal: {
           firstName: profile.firstName || "",
           surname: profile.surname || "",
           fatherName: profile.fatherName || "",
           husbandName: profile.husbandName || "",
-          gender: profile.gender === "FEMALE" ? "Female" : "Male",
+          gender: profile.gender === 'FEMALE' ? 'Female' : 'Male',
           dob: formatDateForForm(profile.dateOfBirth),
           mobile: profile.mobile || "",
           bloodGroup: mapBloodGroupFromBackend(profile.bloodGroup),
@@ -114,15 +105,12 @@ export default function HomeScreen() {
           mobile: profile.emergencyPhone || "",
         },
         selfieUri: profile.selfieFilename ? "EXISTING" : null,
-        existingDocuments: profile.documents?.map((d: any) => d.type) || [],
+        existingDocuments: profile.documents?.map((d: any) => d.type) || []
       });
 
       router.push("/(onboarding)/new-guard/employee-details");
     } catch (error) {
-      Alert.alert(
-        "Error",
-        "Failed to fetch application details. Please check your connection.",
-      );
+      Alert.alert("Error", "Failed to fetch application details. Please check your connection.");
     } finally {
       setIsFetchingEdit(false);
     }

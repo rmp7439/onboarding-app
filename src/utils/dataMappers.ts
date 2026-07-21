@@ -37,6 +37,7 @@ export const formatDateForForm = (isoString: string): string => {
 
 export const mapEmployeeData = (data: OnboardingData) => {
   return {
+    unit: data.employment.unit, // FIX: Actually send the unit to the backend
     firstName: data.personal.firstName,
     surname: data.personal.surname,
     fatherName: data.personal.fatherName,

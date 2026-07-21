@@ -27,6 +27,7 @@ interface EmployeeProfile {
   status: string;
   rejectReason: string | null;
   correctionRemark?: string | null;
+  unit?: string | null;
   selfieUrl: string | null;
   selfieFilename?: string | null;
   aadhaar?: string;
@@ -168,7 +169,7 @@ export default function ProfileScreen() {
       editEmployeeId: profile.id,
       employment: {
         joiningDate: formatDateForForm(profile.joiningDate),
-        unit: "", 
+        unit: profile.unit || "", 
       },
       personal: {
         firstName: profile.firstName || "",
