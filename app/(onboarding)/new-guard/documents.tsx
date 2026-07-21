@@ -7,7 +7,7 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
-  Alert
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -23,16 +23,56 @@ import { DocumentItem } from "../../../src/types/Document";
 import { colors, spacing, typography, radius } from "../../../src/theme";
 import { IMAGE_QUALITY } from "../../../src/constants/App";
 import { RecentEmployeeStore } from "../../../src/utils/RecentEmployeeStore";
-import { lightImpact, success, error as errorHaptic } from "../../../src/utils/haptics";
+import {
+  lightImpact,
+  success,
+  error as errorHaptic,
+} from "../../../src/utils/haptics";
 
 const INITIAL_DOCUMENTS: DocumentItem[] = [
-  { id: "aadhaar", title: "Aadhaar Card", uri: null, filename: null, required: true },
+  {
+    id: "aadhaar",
+    title: "Aadhaar Card",
+    uri: null,
+    filename: null,
+    required: true,
+  },
   { id: "pan", title: "PAN Card", uri: null, filename: null, required: false },
-  { id: "driving", title: "Driving Licence", uri: null, filename: null, required: false },
-  { id: "bank", title: "Bank Passbook", uri: null, filename: null, required: false },
-  { id: "education", title: "Education Proof", uri: null, filename: null, required: false },
-  { id: "voter", title: "Voter ID Card", uri: null, filename: null, required: false },
-  { id: "discharge", title: "Discharge Book", uri: null, filename: null, required: false },
+  {
+    id: "driving",
+    title: "Driving Licence",
+    uri: null,
+    filename: null,
+    required: false,
+  },
+  {
+    id: "bank",
+    title: "Bank Passbook",
+    uri: null,
+    filename: null,
+    required: false,
+  },
+  {
+    id: "education",
+    title: "Education Proof",
+    uri: null,
+    filename: null,
+    required: false,
+  },
+  {
+    id: "voter",
+    title: "Voter ID Card",
+    uri: null,
+    filename: null,
+    required: false,
+  },
+  {
+    id: "discharge",
+    title: "Discharge Book",
+    uri: null,
+    filename: null,
+    required: false,
+  },
 ];
 
 export default function DocumentsScreen() {
@@ -40,40 +80,47 @@ export default function DocumentsScreen() {
   const { data, updateData, resetData } = useOnboarding();
   const { openPicker, PickerComponent } = useImagePickerAction();
   const [documents, setDocuments] = useState<DocumentItem[]>(INITIAL_DOCUMENTS);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
-
-  const [registeredEmployeeId, setRegisteredEmployeeId] = useState<string | null>(null);
+  const [registeredEmployeeId, setRegisteredEmployeeId] = useState<
+    string | null
+  >(null);
   const [isSelfieUploaded, setIsSelfieUploaded] = useState(false);
   const [completedDocUploads, setCompletedDocUploads] = useState<string[]>([]);
 
-  // Identify pre-existing documents on load if we are editing an application
+  // Pre-fill existing documents from context
   useEffect(() => {
-    if (data.isEditMode && data.existingDocuments && data.existingDocuments.length > 0) {
+    if (
+      data.isEditMode &&
+      data.existingDocuments &&
+      data.existingDocuments.length > 0
+    ) {
       const backendToFrontendMap: Record<string, string> = {
-        'AADHAAR': 'aadhaar',
-        'PAN': 'pan',
-        'DRIVING_LICENSE': 'driving',
-        'BANK_PASSBOOK': 'bank',
-        'EDUCATION': 'education',
-        'VOTER_ID': 'voter',
-        'DISCHARGE_BOOK': 'discharge'
+        AADHAAR: "aadhaar",
+        PAN: "pan",
+        DRIVING_LICENSE: "driving",
+        BANK_PASSBOOK: "bank",
+        EDUCATION: "education",
+        VOTER_ID: "voter",
+        DISCHARGE_BOOK: "discharge",
       };
-      
-      const existingIds = data.existingDocuments.map(type => backendToFrontendMap[type]);
-      
-      setDocuments(prev => prev.map(doc => 
-        existingIds.includes(doc.id) && !doc.uri 
-          ? { ...doc, uri: "EXISTING", filename: "Previously Uploaded" } 
-          : doc
-      ));
+      const existingIds = data.existingDocuments.map(
+        (type) => backendToFrontendMap[type],
+      );
+
+      setDocuments((prev) =>
+        prev.map((doc) =>
+          existingIds.includes(doc.id) && !doc.uri
+            ? { ...doc, uri: "EXISTING", filename: "Previously Uploaded" }
+            : doc,
+        ),
+      );
     }
   }, [data.isEditMode, data.existingDocuments]);
 
   const handlePickImage = async (id: string, source: "gallery" | "camera") => {
     try {
-      setErrorText(null); 
+      setErrorText(null);
       let result;
       if (source === "gallery") {
         result = await ImagePicker.launchImageLibraryAsync({
@@ -90,13 +137,16 @@ export default function DocumentsScreen() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
-        const filename = asset.fileName || asset.uri.split("/").pop() || "document.jpg";
+        const filename =
+          asset.fileName || asset.uri.split("/").pop() || "document.jpg";
         setDocuments((prev) =>
-          prev.map((doc) => doc.id === id ? { ...doc, uri: asset.uri, filename } : doc)
+          prev.map((doc) =>
+            doc.id === id ? { ...doc, uri: asset.uri, filename } : doc,
+          ),
         );
       }
     } catch (error: any) {
-      setErrorText(error.message || "Failed to access media. Please check permissions.");
+      setErrorText(error.message || "Failed to access media.");
     }
   };
 
@@ -118,32 +168,37 @@ export default function DocumentsScreen() {
 
     try {
       let empId = registeredEmployeeId;
+      const mappedData = mapEmployeeData(data);
 
+      // Submission Logic Route
       if (data.isEditMode && data.editEmployeeId) {
         empId = data.editEmployeeId;
-        const mappedData = mapEmployeeData(data);
-        // Call the PUT endpoint instead of POST
-        await api.updateEmployee(empId, mappedData);
+        await api.updateEmployee(empId, mappedData); // PUT logic
       } else {
         if (!empId) {
-          const mappedData = mapEmployeeData(data);
-          const result = await api.registerEmployee(mappedData);
+          const result = await api.registerEmployee(mappedData); // POST logic
           empId = result.id;
           setRegisteredEmployeeId(empId);
           await RecentEmployeeStore.saveId(result.id);
         }
       }
 
-      // Check against "EXISTING" flag to avoid trying to re-upload previously attached documents
-      if (data.selfieUri && data.selfieUri !== "EXISTING" && !isSelfieUploaded) {
+      // Upload selfie if it was changed
+      if (
+        data.selfieUri &&
+        data.selfieUri !== "EXISTING" &&
+        !isSelfieUploaded
+      ) {
         await api.uploadSelfie(empId!, data.selfieUri);
         setIsSelfieUploaded(true);
       }
 
-      const docsToUpload = documents.filter((doc) => doc.uri !== null && doc.uri !== "EXISTING");
+      // Upload documents that are strictly NOT marked as EXISTING
+      const docsToUpload = documents.filter(
+        (doc) => doc.uri !== null && doc.uri !== "EXISTING",
+      );
       for (let i = 0; i < docsToUpload.length; i++) {
         const doc = docsToUpload[i];
-
         if (completedDocUploads.includes(doc.id)) continue;
 
         const docType = mapDocumentType(doc.id);
@@ -151,28 +206,30 @@ export default function DocumentsScreen() {
         setCompletedDocUploads((prev) => [...prev, doc.id]);
       }
 
-      const finalDocNames = documents.filter(d => d.uri !== null).map((doc) => doc.title);
+      const finalDocNames = documents
+        .filter((d) => d.uri !== null)
+        .map((doc) => doc.title);
       updateData({ uploadedDocuments: finalDocNames });
 
       success();
-      
+
       if (data.isEditMode) {
         Alert.alert("Success", "Application resubmitted successfully.", [
-          { text: "OK", onPress: () => {
-            resetData();
-            router.replace("/(onboarding)/home");
-          }}
+          {
+            text: "OK",
+            onPress: () => {
+              resetData();
+              router.replace("/(onboarding)/home");
+            },
+          },
         ]);
       } else {
         router.push("/(onboarding)/new-guard/success");
       }
     } catch (error: any) {
       errorHaptic();
-      setErrorText(
-        error.message ||
-          "An unexpected error occurred during the upload process.",
-      );
-      setIsSubmitting(false); 
+      setErrorText(error.message || "An unexpected error occurred.");
+      setIsSubmitting(false);
     }
   };
 
@@ -196,7 +253,6 @@ export default function DocumentsScreen() {
 
   const requiredDocs = documents.filter((doc) => doc.required);
   const optionalDocs = documents.filter((doc) => !doc.required);
-
   const isContinueEnabled = requiredDocs.every((doc) => doc.uri !== null);
 
   const renderDocumentRow = (
@@ -206,7 +262,7 @@ export default function DocumentsScreen() {
   ) => {
     const isLast = index === total - 1;
     const isExisting = doc.uri === "EXISTING";
-    
+
     return (
       <View
         key={doc.id}
@@ -255,7 +311,13 @@ export default function DocumentsScreen() {
               )}
               <View style={styles.fileDetails}>
                 <Text
-                  style={[styles.filenameText, isExisting && { fontStyle: "italic", color: colors.textSecondary }]}
+                  style={[
+                    styles.filenameText,
+                    isExisting && {
+                      fontStyle: "italic",
+                      color: colors.textSecondary,
+                    },
+                  ]}
                   numberOfLines={1}
                   ellipsizeMode="middle"
                 >
@@ -305,7 +367,6 @@ export default function DocumentsScreen() {
             renderDocumentRow(doc, index, requiredDocs.length),
           )}
         </Card>
-
         {optionalDocs.length > 0 && (
           <>
             <SectionTitle
@@ -320,7 +381,6 @@ export default function DocumentsScreen() {
           </>
         )}
       </ScrollView>
-
       <View style={styles.footer}>
         {errorText ? <Text style={styles.errorBanner}>{errorText}</Text> : null}
         <Button
@@ -335,6 +395,7 @@ export default function DocumentsScreen() {
   );
 }
 
+// ... styles remain unchanged
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollView: { flex: 1 },
@@ -440,14 +501,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.background,
   },
-  loadingContent: {
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-  },
-  loaderIcon: {
-    marginBottom: spacing.xl,
-    transform: [{ scale: 1.5 }],
-  },
+  loadingContent: { alignItems: "center", paddingHorizontal: spacing.xl },
+  loaderIcon: { marginBottom: spacing.xl, transform: [{ scale: 1.5 }] },
   loadingTitle: {
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.bold,

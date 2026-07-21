@@ -28,6 +28,7 @@ interface EmployeeProfile {
   rejectReason: string | null;
   correctionRemark?: string | null;
   selfieUrl: string | null;
+  selfieFilename?: string | null;
   aadhaar?: string;
   pan?: string;
   uan?: string;
@@ -160,24 +161,24 @@ export default function ProfileScreen() {
   const handleEditResubmit = () => {
     if (!profile) return;
     lightImpact();
-
-    // Pre-fill the multi-step form and mark it as edit mode
+    
+    // Exactly matches the Home Dashboard full-mapping logic
     updateData({
       isEditMode: true,
       editEmployeeId: profile.id,
       employment: {
-        joiningDate: formatDateForForm(profile.joiningDate || ""),
-        unit: "", // unit not stored by default
+        joiningDate: formatDateForForm(profile.joiningDate),
+        unit: "", 
       },
       personal: {
         firstName: profile.firstName || "",
         surname: profile.surname || "",
         fatherName: profile.fatherName || "",
         husbandName: profile.husbandName || "",
-        gender: profile.gender || "",
+        gender: profile.gender === 'FEMALE' ? 'Female' : 'Male',
         dob: formatDateForForm(profile.dateOfBirth || ""),
         mobile: profile.mobile || "",
-        bloodGroup: mapBloodGroupFromBackend(profile.bloodGroup || ""),
+        bloodGroup: mapBloodGroupFromBackend(profile.bloodGroup),
       },
       identity: {
         aadhaar: profile.aadhaar || "",
@@ -204,8 +205,8 @@ export default function ProfileScreen() {
         relation: profile.emergencyRelation || "",
         mobile: profile.emergencyPhone || "",
       },
-      selfieUri: profile.selfieUrl ? "EXISTING" : null,
-      existingDocuments: profile.documents?.map((d) => d.type) || [],
+      selfieUri: profile.selfieUrl || profile.selfieFilename ? "EXISTING" : null,
+      existingDocuments: profile.documents?.map((d: any) => d.type) || []
     });
     router.push("/(onboarding)/new-guard/employee-details");
   };

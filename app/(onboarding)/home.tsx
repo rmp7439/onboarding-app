@@ -8,7 +8,7 @@ import {
   Text,
   Alert,
   ActivityIndicator,
-  View
+  View,
 } from "react-native";
 import { Card, Screen, SectionTitle } from "../../src/components";
 import { colors, radius, spacing, typography } from "../../src/theme";
@@ -16,12 +16,15 @@ import { lightImpact } from "../../src/utils/haptics";
 import { api } from "../../src/api/apiClient";
 import { RecentEmployeeStore } from "../../src/utils/RecentEmployeeStore";
 import { useOnboarding } from "../../src/context/OnboardingContext";
-import { formatDateForForm, mapBloodGroupFromBackend } from "../../src/utils/dataMappers";
+import {
+  formatDateForForm,
+  mapBloodGroupFromBackend,
+} from "../../src/utils/dataMappers";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { updateData, resetData } = useOnboarding();
-  
+
   const [isOperationsExpanded, setIsOperationsExpanded] = useState(true);
   const [isFetchingEdit, setIsFetchingEdit] = useState(false);
   const animation = useRef(new Animated.Value(1)).current;
@@ -40,40 +43,50 @@ export default function HomeScreen() {
   const handleEditApplication = async () => {
     lightImpact();
     setIsFetchingEdit(true);
-    
+
     try {
       const recentId = await RecentEmployeeStore.getId();
       if (!recentId) {
-        Alert.alert("Notice", "No applications available for editing.");
-        setIsFetchingEdit(false);
-        return;
-      }
-      
-      const profile = await api.getEmployeeProfile(recentId);
-      
-      if (profile.status !== 'RETURNED_FOR_CORRECTION') {
-        Alert.alert("Notice", "No applications available for editing.");
+        Alert.alert(
+          "Notice",
+          "You have no applications available for editing.",
+        );
         setIsFetchingEdit(false);
         return;
       }
 
-      // Pre-fill context for Edit Mode
+      const profile = await api.getEmployeeProfile(recentId);
+
+      // Access Control: Only RETURNED or REJECTED
+      if (
+        profile.status !== "RETURNED_FOR_CORRECTION" &&
+        profile.status !== "REJECTED"
+      ) {
+        Alert.alert(
+          "Notice",
+          "You have no applications available for editing.",
+        );
+        setIsFetchingEdit(false);
+        return;
+      }
+
+      // Prefill Context with FULL data payload mapped properly
       updateData({
         isEditMode: true,
         editEmployeeId: profile.id,
         employment: {
-          joiningDate: formatDateForForm(profile.joiningDate || ""),
-          unit: profile.unit || "", 
+          joiningDate: formatDateForForm(profile.joiningDate),
+          unit: "", // Local non-persisted field
         },
         personal: {
           firstName: profile.firstName || "",
           surname: profile.surname || "",
           fatherName: profile.fatherName || "",
           husbandName: profile.husbandName || "",
-          gender: profile.gender || "",
-          dob: formatDateForForm(profile.dateOfBirth || ""),
+          gender: profile.gender === "FEMALE" ? "Female" : "Male",
+          dob: formatDateForForm(profile.dateOfBirth),
           mobile: profile.mobile || "",
-          bloodGroup: mapBloodGroupFromBackend(profile.bloodGroup || ""),
+          bloodGroup: mapBloodGroupFromBackend(profile.bloodGroup),
         },
         identity: {
           aadhaar: profile.aadhaar || "",
@@ -100,13 +113,16 @@ export default function HomeScreen() {
           relation: profile.emergencyRelation || "",
           mobile: profile.emergencyPhone || "",
         },
-        selfieUri: profile.selfieUrl ? "EXISTING" : null,
-        existingDocuments: profile.documents?.map((d: any) => d.type) || []
+        selfieUri: profile.selfieFilename ? "EXISTING" : null,
+        existingDocuments: profile.documents?.map((d: any) => d.type) || [],
       });
 
       router.push("/(onboarding)/new-guard/employee-details");
     } catch (error) {
-      Alert.alert("Error", "Failed to fetch application details. Please check your connection.");
+      Alert.alert(
+        "Error",
+        "Failed to fetch application details. Please check your connection.",
+      );
     } finally {
       setIsFetchingEdit(false);
     }
@@ -114,13 +130,13 @@ export default function HomeScreen() {
 
   const handleRegisterNew = () => {
     lightImpact();
-    resetData(); // Ensure we don't accidentally load edit state
+    resetData(); // Ensure context is clean for a new registration
     router.push("/(onboarding)/new-guard/employee-details");
   };
 
   const contentHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 256], // Expanded height to fit 4 items
+    outputRange: [0, 256],
   });
 
   const iconRotation = animation.interpolate({
@@ -165,16 +181,20 @@ export default function HomeScreen() {
               style={({ pressed }) => [
                 styles.menuItem,
                 pressed && styles.menuItemPressed,
-                isFetchingEdit && styles.menuItemDisabled
+                isFetchingEdit && styles.menuItemDisabled,
               ]}
               onPress={handleEditApplication}
               disabled={isFetchingEdit}
             >
               <Text style={styles.menuItemIcon}>✏️</Text>
               <View style={styles.menuItemTextContainer}>
-                <Text style={styles.menuItemText}>Edit Existing Application</Text>
+                <Text style={styles.menuItemText}>
+                  Edit Existing Application
+                </Text>
               </View>
-              {isFetchingEdit && <ActivityIndicator size="small" color={colors.primary} />}
+              {isFetchingEdit && (
+                <ActivityIndicator size="small" color={colors.primary} />
+              )}
             </Pressable>
 
             <Pressable
@@ -235,9 +255,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.bold,
   },
   accordionIcon: { fontSize: typography.fontSize.sm },
-  accordionContent: {
-    overflow: "hidden",
-  },
+  accordionContent: { overflow: "hidden" },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -246,19 +264,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     height: 64,
   },
-  menuItemPressed: {
-    backgroundColor: colors.surface,
-  },
-  menuItemDisabled: {
-    opacity: 0.6,
-  },
+  menuItemPressed: { backgroundColor: colors.surface },
+  menuItemDisabled: { opacity: 0.6 },
   menuItemIcon: { fontSize: typography.fontSize.lg, marginRight: spacing.md },
   menuItemTextContainer: { flex: 1 },
   menuItemText: {
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.semibold,
   },
-  logoutText: {
-    color: colors.error,
-  },
+  logoutText: { color: colors.error },
 });
