@@ -160,7 +160,7 @@ export default function DocumentsScreen() {
         Alert.alert("Success", "Application resubmitted successfully.", [
           { text: "OK", onPress: () => {
             resetData();
-            router.replace("/(onboarding)/profile");
+            router.replace("/(onboarding)/home");
           }}
         ]);
       } else {

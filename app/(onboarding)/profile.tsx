@@ -7,9 +7,11 @@ import { colors, radius, spacing, typography } from "../../src/theme";
 import { RecentEmployeeStore } from "../../src/utils/RecentEmployeeStore";
 import { lightImpact } from "../../src/utils/haptics";
 import { useOnboarding } from "../../src/context/OnboardingContext";
-import { formatDateForForm, mapBloodGroupFromBackend } from "../../src/utils/dataMappers";
+import {
+  formatDateForForm,
+  mapBloodGroupFromBackend,
+} from "../../src/utils/dataMappers";
 
-// Extended interface to capture all possible backend fields
 interface EmployeeProfile {
   id: string;
   firstName: string;
@@ -77,7 +79,6 @@ export default function ProfileScreen() {
 
       setProfile((prevProfile) => {
         if (!prevProfile) return data;
-
         const hasMeaningfulChange =
           prevProfile.status !== data.status ||
           prevProfile.employeeCode !== data.employeeCode ||
@@ -90,7 +91,6 @@ export default function ProfileScreen() {
             selfieUrl: prevProfile.selfieUrl,
           };
         }
-
         return prevProfile;
       });
     } catch (err: any) {
@@ -112,25 +112,19 @@ export default function ProfileScreen() {
       const executeBackgroundPoll = async () => {
         if (!isActive) return;
         await fetchProfile(true);
-        if (isActive) {
-          timeoutId = setTimeout(executeBackgroundPoll, 5000);
-        }
+        if (isActive) timeoutId = setTimeout(executeBackgroundPoll, 5000);
       };
 
       const startLifecycle = async () => {
         await fetchProfile(false);
-        if (isActive) {
-          timeoutId = setTimeout(executeBackgroundPoll, 5000);
-        }
+        if (isActive) timeoutId = setTimeout(executeBackgroundPoll, 5000);
       };
 
       startLifecycle();
 
       return () => {
         isActive = false;
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
+        if (timeoutId) clearTimeout(timeoutId);
       };
     }, [fetchProfile]),
   );
@@ -142,7 +136,11 @@ export default function ProfileScreen() {
       case "REJECTED":
         return { bg: "#FEE2E2", text: colors.error, label: "REJECTED" };
       case "RETURNED_FOR_CORRECTION":
-        return { bg: "#FEF3C7", text: colors.warning, label: "Returned for Correction" };
+        return {
+          bg: "#FEF3C7",
+          text: colors.warning,
+          label: "Returned for Correction",
+        };
       case "PENDING":
       default:
         return { bg: "#FEF3C7", text: colors.warning, label: "PENDING" };
@@ -162,14 +160,14 @@ export default function ProfileScreen() {
   const handleEditResubmit = () => {
     if (!profile) return;
     lightImpact();
-    
-    // Map existing profile directly into context to pre-fill the multi-step form
+
+    // Pre-fill the multi-step form and mark it as edit mode
     updateData({
       isEditMode: true,
       editEmployeeId: profile.id,
       employment: {
         joiningDate: formatDateForForm(profile.joiningDate || ""),
-        unit: "", // Assuming unit remains blank if not fetched
+        unit: "", // unit not stored by default
       },
       personal: {
         firstName: profile.firstName || "",
@@ -207,7 +205,7 @@ export default function ProfileScreen() {
         mobile: profile.emergencyPhone || "",
       },
       selfieUri: profile.selfieUrl ? "EXISTING" : null,
-      existingDocuments: profile.documents?.map(d => d.type) || []
+      existingDocuments: profile.documents?.map((d) => d.type) || [],
     });
     router.push("/(onboarding)/new-guard/employee-details");
   };
@@ -232,10 +230,7 @@ export default function ProfileScreen() {
           </Text>
           <Button
             title="Back to Dashboard"
-            onPress={() => {
-              lightImpact();
-              router.back();
-            }}
+            onPress={() => router.back()}
             style={styles.retryButton}
           />
         </View>
@@ -250,10 +245,7 @@ export default function ProfileScreen() {
         <Text style={styles.errorText}>{error}</Text>
         <Button
           title="Back to Dashboard"
-          onPress={() => {
-            lightImpact();
-            router.back();
-          }}
+          onPress={() => router.back()}
           style={styles.retryButton}
         />
       </View>
@@ -301,14 +293,12 @@ export default function ProfileScreen() {
 
       {isReturned && profile.correctionRemark ? (
         <Card style={[styles.detailsCard, styles.returnedCard]}>
-          <Text style={styles.returnedTitle}>Action Required</Text>
-          <Text style={styles.returnedBody}>Your application has been returned for correction.</Text>
           <View style={styles.reasonContainer}>
-            <Text style={styles.reasonLabel}>Reason</Text>
-            <Text style={styles.reasonText}>{profile.correctionRemark}</Text>
+            <Text style={styles.reasonLabel}>Reason : {profile.correctionRemark}</Text>
           </View>
         </Card>
-      ) : profile.status.toUpperCase() === "REJECTED" && profile.rejectReason ? (
+      ) : profile.status.toUpperCase() === "REJECTED" &&
+        profile.rejectReason ? (
         <Card style={[styles.detailsCard, styles.rejectionCard]}>
           <Text style={styles.rejectionTitle}>Application Rejected</Text>
           <Text style={styles.rejectionBody}>{profile.rejectReason}</Text>
@@ -321,7 +311,6 @@ export default function ProfileScreen() {
           <Text style={styles.detailValue}>+91 {profile.mobile}</Text>
         </View>
         <View style={styles.divider} />
-
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Joining Date</Text>
           <Text style={styles.detailValue}>
@@ -329,13 +318,11 @@ export default function ProfileScreen() {
           </Text>
         </View>
         <View style={styles.divider} />
-
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Gender</Text>
           <Text style={styles.detailValue}>{profile.gender}</Text>
         </View>
         <View style={styles.divider} />
-
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Blood Group</Text>
           <Text style={styles.detailValue}>{profile.bloodGroup}</Text>
@@ -394,7 +381,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   retryButton: { width: "100%", marginBottom: spacing.md },
-
   identityCard: {
     alignItems: "center",
     paddingVertical: spacing.xl,
@@ -451,7 +437,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-
   rejectionCard: {
     borderColor: colors.error,
     backgroundColor: "#FEF2F2",
@@ -468,7 +453,6 @@ const styles = StyleSheet.create({
     color: colors.error,
     lineHeight: typography.lineHeight.md,
   },
-
   returnedCard: {
     borderColor: colors.warning,
     backgroundColor: "#FEF3C7",
@@ -490,7 +474,7 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: "rgba(217, 119, 6, 0.2)"
+    borderColor: "rgba(217, 119, 6, 0.2)",
   },
   reasonLabel: {
     fontSize: typography.fontSize.sm,
@@ -505,7 +489,6 @@ const styles = StyleSheet.create({
     color: "#92400E",
     lineHeight: typography.lineHeight.md,
   },
-
   detailsCard: { padding: spacing.lg, marginBottom: spacing.xl },
   detailRow: {
     flexDirection: "row",
