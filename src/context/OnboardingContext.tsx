@@ -7,6 +7,10 @@ export interface EmergencyContact {
 }
 
 export interface OnboardingData {
+  isEditMode: boolean;
+  editEmployeeId: string | null;
+  existingDocuments: string[];
+
   employment: {
     joiningDate: string;
     unit: string;
@@ -54,6 +58,10 @@ interface OnboardingContextType {
 }
 
 const INITIAL_DATA: OnboardingData = {
+  isEditMode: false,
+  editEmployeeId: null,
+  existingDocuments: [],
+
   employment: { joiningDate: "", unit: "" },
   personal: {
     firstName: "",

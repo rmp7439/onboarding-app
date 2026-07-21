@@ -6,23 +6,48 @@ import { Button, Card, Screen, SectionTitle } from "../../src/components";
 import { colors, radius, spacing, typography } from "../../src/theme";
 import { RecentEmployeeStore } from "../../src/utils/RecentEmployeeStore";
 import { lightImpact } from "../../src/utils/haptics";
+import { useOnboarding } from "../../src/context/OnboardingContext";
+import { formatDateForForm, mapBloodGroupFromBackend } from "../../src/utils/dataMappers";
 
 interface EmployeeProfile {
   id: string;
   firstName: string;
   surname: string;
+  fatherName?: string;
+  husbandName?: string;
+  gender: string;
+  bloodGroup: string;
+  dateOfBirth?: string;
+  joiningDate: string;
+  mobile: string;
   employeeCode: string | null;
   status: string;
   rejectReason: string | null;
-  mobile: string;
-  joiningDate: string;
-  gender: string;
-  bloodGroup: string;
+  correctionRemark?: string | null;
   selfieUrl: string | null;
+  aadhaar?: string;
+  pan?: string;
+  uan?: string;
+  esic?: string;
+  permanentAddress?: string;
+  currentAddress?: string;
+  city?: string;
+  state?: string;
+  pinCode?: string;
+  bankName?: string;
+  accountNumber?: string;
+  ifsc?: string;
+  branch?: string;
+  micr?: string;
+  emergencyName?: string;
+  emergencyRelation?: string;
+  emergencyPhone?: string;
+  documents?: { id: string; type: string; originalFilename: string }[];
 }
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { updateData } = useOnboarding();
 
   const [profile, setProfile] = useState<EmployeeProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,27 +75,21 @@ export default function ProfileScreen() {
       const data = await api.getEmployeeProfile(recentId);
 
       setProfile((prevProfile) => {
-        // Accept initial data payload
         if (!prevProfile) return data;
 
-        // Compare ONLY mutable fields. Explicitly exclude selfieUrl because
-        // the signed URL signature changes every request.
         const hasMeaningfulChange =
           prevProfile.status !== data.status ||
           prevProfile.employeeCode !== data.employeeCode ||
-          prevProfile.rejectReason !== data.rejectReason;
+          prevProfile.rejectReason !== data.rejectReason ||
+          prevProfile.correctionRemark !== data.correctionRemark;
 
         if (hasMeaningfulChange) {
           return {
             ...data,
-            // Preserve the exact string reference of the original URL.
-            // This prevents React Native's <Image> prop identity from changing,
-            // ensuring the view never flashes or reloads the image data.
             selfieUrl: prevProfile.selfieUrl,
           };
         }
 
-        // Return exact existing reference to completely bypass React reconciliation
         return prevProfile;
       });
     } catch (err: any) {
@@ -91,9 +110,7 @@ export default function ProfileScreen() {
 
       const executeBackgroundPoll = async () => {
         if (!isActive) return;
-
         await fetchProfile(true);
-
         if (isActive) {
           timeoutId = setTimeout(executeBackgroundPoll, 5000);
         }
@@ -101,7 +118,6 @@ export default function ProfileScreen() {
 
       const startLifecycle = async () => {
         await fetchProfile(false);
-
         if (isActive) {
           timeoutId = setTimeout(executeBackgroundPoll, 5000);
         }
@@ -121,12 +137,14 @@ export default function ProfileScreen() {
   const getStatusBadgeStyle = (status: string) => {
     switch (status.toUpperCase()) {
       case "APPROVED":
-        return { bg: "#DCFCE7", text: colors.success };
+        return { bg: "#DCFCE7", text: colors.success, label: "APPROVED" };
       case "REJECTED":
-        return { bg: "#FEE2E2", text: colors.error };
+        return { bg: "#FEE2E2", text: colors.error, label: "REJECTED" };
+      case "RETURNED_FOR_CORRECTION":
+        return { bg: "#FEF3C7", text: colors.warning, label: "Returned for Correction" };
       case "PENDING":
       default:
-        return { bg: "#FEF3C7", text: colors.warning };
+        return { bg: "#FEF3C7", text: colors.warning, label: "PENDING" };
     }
   };
 
@@ -138,6 +156,57 @@ export default function ProfileScreen() {
       month: "short",
       year: "numeric",
     });
+  };
+
+  const handleEditResubmit = () => {
+    if (!profile) return;
+    lightImpact();
+    updateData({
+      isEditMode: true,
+      editEmployeeId: profile.id,
+      employment: {
+        joiningDate: formatDateForForm(profile.joiningDate || ""),
+        unit: "",
+      },
+      personal: {
+        firstName: profile.firstName || "",
+        surname: profile.surname || "",
+        fatherName: profile.fatherName || "",
+        husbandName: profile.husbandName || "",
+        gender: profile.gender || "",
+        dob: formatDateForForm(profile.dateOfBirth || ""),
+        mobile: profile.mobile || "",
+        bloodGroup: mapBloodGroupFromBackend(profile.bloodGroup || ""),
+      },
+      identity: {
+        aadhaar: profile.aadhaar || "",
+        pan: profile.pan || "",
+        uan: profile.uan || "",
+        esic: profile.esic || "",
+      },
+      address: {
+        permanent: profile.permanentAddress || "",
+        current: profile.currentAddress || "",
+        city: profile.city || "",
+        state: profile.state || "",
+        pinCode: profile.pinCode || "",
+      },
+      bank: {
+        bankName: profile.bankName || "",
+        accountNumber: profile.accountNumber || "",
+        ifsc: profile.ifsc || "",
+        branch: profile.branch || "",
+        micr: profile.micr || "",
+      },
+      emergencyContact: {
+        name: profile.emergencyName || "",
+        relation: profile.emergencyRelation || "",
+        mobile: profile.emergencyPhone || "",
+      },
+      selfieUri: profile.selfieUrl ? "EXISTING" : null,
+      existingDocuments: profile.documents?.map(d => d.type) || []
+    });
+    router.push("/(onboarding)/new-guard/employee-details");
   };
 
   if (isLoading && !profile) {
@@ -189,6 +258,7 @@ export default function ProfileScreen() {
   }
 
   const badgeStyle = getStatusBadgeStyle(profile.status);
+  const isReturned = profile.status.toUpperCase() === "RETURNED_FOR_CORRECTION";
 
   return (
     <Screen style={styles.container}>
@@ -221,12 +291,17 @@ export default function ProfileScreen() {
 
         <View style={[styles.badge, { backgroundColor: badgeStyle.bg }]}>
           <Text style={[styles.badgeText, { color: badgeStyle.text }]}>
-            {profile.status}
+            {badgeStyle.label}
           </Text>
         </View>
       </Card>
 
-      {profile.status.toUpperCase() === "REJECTED" && profile.rejectReason ? (
+      {isReturned && profile.correctionRemark ? (
+        <Card style={[styles.detailsCard, styles.returnedCard]}>
+          <Text style={styles.returnedTitle}>Correction Required</Text>
+          <Text style={styles.returnedBody}>{profile.correctionRemark}</Text>
+        </Card>
+      ) : profile.status.toUpperCase() === "REJECTED" && profile.rejectReason ? (
         <Card style={[styles.detailsCard, styles.rejectionCard]}>
           <Text style={styles.rejectionTitle}>Application Rejected</Text>
           <Text style={styles.rejectionBody}>{profile.rejectReason}</Text>
@@ -261,6 +336,13 @@ export default function ProfileScreen() {
       </Card>
 
       <View style={styles.footer}>
+        {isReturned && (
+          <Button
+            title="Edit & Resubmit"
+            onPress={handleEditResubmit}
+            style={{ marginBottom: spacing.md }}
+          />
+        )}
         <Button
           title="Back to Dashboard"
           variant="outline"
@@ -377,6 +459,23 @@ const styles = StyleSheet.create({
   rejectionBody: {
     fontSize: typography.fontSize.md,
     color: colors.error,
+    lineHeight: typography.lineHeight.md,
+  },
+
+  returnedCard: {
+    borderColor: colors.warning,
+    backgroundColor: "#FEF3C7",
+    borderWidth: 1,
+  },
+  returnedTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: "#D97706",
+    marginBottom: spacing.xs,
+  },
+  returnedBody: {
+    fontSize: typography.fontSize.md,
+    color: "#D97706",
     lineHeight: typography.lineHeight.md,
   },
 

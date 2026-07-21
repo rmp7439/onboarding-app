@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
+  Alert
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -21,69 +22,52 @@ import {
 import { DocumentItem } from "../../../src/types/Document";
 import { colors, spacing, typography, radius } from "../../../src/theme";
 import { IMAGE_QUALITY } from "../../../src/constants/App";
-import { RecentEmployeeStore } from "@/src/utils/RecentEmployeeStore";
+import { RecentEmployeeStore } from "../../../src/utils/RecentEmployeeStore";
 import { lightImpact, success, error as errorHaptic } from "../../../src/utils/haptics";
 
 const INITIAL_DOCUMENTS: DocumentItem[] = [
-  {
-    id: "aadhaar",
-    title: "Aadhaar Card",
-    uri: null,
-    filename: null,
-    required: true,
-  },
+  { id: "aadhaar", title: "Aadhaar Card", uri: null, filename: null, required: true },
   { id: "pan", title: "PAN Card", uri: null, filename: null, required: false },
-  {
-    id: "driving",
-    title: "Driving Licence",
-    uri: null,
-    filename: null,
-    required: false,
-  },
-  {
-    id: "bank",
-    title: "Bank Passbook",
-    uri: null,
-    filename: null,
-    required: false,
-  },
-  {
-    id: "education",
-    title: "Education Proof",
-    uri: null,
-    filename: null,
-    required: false,
-  },
-  {
-    id: "voter",
-    title: "Voter ID Card",
-    uri: null,
-    filename: null,
-    required: false,
-  },
-  {
-    id: "discharge",
-    title: "Discharge Book",
-    uri: null,
-    filename: null,
-    required: false,
-  },
+  { id: "driving", title: "Driving Licence", uri: null, filename: null, required: false },
+  { id: "bank", title: "Bank Passbook", uri: null, filename: null, required: false },
+  { id: "education", title: "Education Proof", uri: null, filename: null, required: false },
+  { id: "voter", title: "Voter ID Card", uri: null, filename: null, required: false },
+  { id: "discharge", title: "Discharge Book", uri: null, filename: null, required: false },
 ];
 
 export default function DocumentsScreen() {
   const router = useRouter();
-  const { data, updateData } = useOnboarding();
+  const { data, updateData, resetData } = useOnboarding();
   const { openPicker, PickerComponent } = useImagePickerAction();
   const [documents, setDocuments] = useState<DocumentItem[]>(INITIAL_DOCUMENTS);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
-  const [registeredEmployeeId, setRegisteredEmployeeId] = useState<
-    string | null
-  >(null);
+  const [registeredEmployeeId, setRegisteredEmployeeId] = useState<string | null>(null);
   const [isSelfieUploaded, setIsSelfieUploaded] = useState(false);
   const [completedDocUploads, setCompletedDocUploads] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (data.isEditMode && data.existingDocuments && data.existingDocuments.length > 0) {
+      const backendToFrontendMap: Record<string, string> = {
+        'AADHAAR': 'aadhaar',
+        'PAN': 'pan',
+        'DRIVING_LICENSE': 'driving',
+        'BANK_PASSBOOK': 'bank',
+        'EDUCATION': 'education',
+        'VOTER_ID': 'voter',
+        'DISCHARGE_BOOK': 'discharge'
+      };
+      const existingIds = data.existingDocuments.map(type => backendToFrontendMap[type]);
+      
+      setDocuments(prev => prev.map(doc => 
+        existingIds.includes(doc.id) && !doc.uri 
+          ? { ...doc, uri: "EXISTING", filename: "Previously Uploaded" } 
+          : doc
+      ));
+    }
+  }, [data.isEditMode, data.existingDocuments]);
 
   const handlePickImage = async (id: string, source: "gallery" | "camera") => {
     try {
@@ -133,21 +117,26 @@ export default function DocumentsScreen() {
     try {
       let empId = registeredEmployeeId;
 
-      if (!empId) {
+      if (data.isEditMode && data.editEmployeeId) {
+        empId = data.editEmployeeId;
         const mappedData = mapEmployeeData(data);
-        const result = await api.registerEmployee(mappedData);
-        empId = result.id;
-        setRegisteredEmployeeId(empId);
-
-        await RecentEmployeeStore.saveId(result.id);
+        await api.updateEmployee(empId, mappedData);
+      } else {
+        if (!empId) {
+          const mappedData = mapEmployeeData(data);
+          const result = await api.registerEmployee(mappedData);
+          empId = result.id;
+          setRegisteredEmployeeId(empId);
+          await RecentEmployeeStore.saveId(result.id);
+        }
       }
 
-      if (!isSelfieUploaded && data.selfieUri) {
+      if (data.selfieUri && data.selfieUri !== "EXISTING" && !isSelfieUploaded) {
         await api.uploadSelfie(empId!, data.selfieUri);
         setIsSelfieUploaded(true);
       }
 
-      const docsToUpload = documents.filter((doc) => doc.uri !== null);
+      const docsToUpload = documents.filter((doc) => doc.uri !== null && doc.uri !== "EXISTING");
       for (let i = 0; i < docsToUpload.length; i++) {
         const doc = docsToUpload[i];
 
@@ -158,11 +147,21 @@ export default function DocumentsScreen() {
         setCompletedDocUploads((prev) => [...prev, doc.id]);
       }
 
-      const finalDocNames = docsToUpload.map((doc) => doc.title);
+      const finalDocNames = documents.filter(d => d.uri !== null).map((doc) => doc.title);
       updateData({ uploadedDocuments: finalDocNames });
 
       success();
-      router.push("/(onboarding)/new-guard/success");
+      
+      if (data.isEditMode) {
+        Alert.alert("Success", "Application resubmitted successfully.", [
+          { text: "OK", onPress: () => {
+            resetData();
+            router.replace("/(onboarding)/profile");
+          }}
+        ]);
+      } else {
+        router.push("/(onboarding)/new-guard/success");
+      }
     } catch (error: any) {
       errorHaptic();
       setErrorText(
@@ -202,6 +201,8 @@ export default function DocumentsScreen() {
     total: number,
   ) => {
     const isLast = index === total - 1;
+    const isExisting = doc.uri === "EXISTING";
+    
     return (
       <View
         key={doc.id}
@@ -241,14 +242,16 @@ export default function DocumentsScreen() {
         ) : (
           <View style={styles.attachmentContainer}>
             <View style={styles.fileInfoRow}>
-              <Image
-                source={{ uri: doc.uri }}
-                style={styles.thumbnail}
-                resizeMode="cover"
-              />
+              {!isExisting && (
+                <Image
+                  source={{ uri: doc.uri }}
+                  style={styles.thumbnail}
+                  resizeMode="cover"
+                />
+              )}
               <View style={styles.fileDetails}>
                 <Text
-                  style={styles.filenameText}
+                  style={[styles.filenameText, isExisting && { fontStyle: "italic", color: colors.textSecondary }]}
                   numberOfLines={1}
                   ellipsizeMode="middle"
                 >
@@ -427,7 +430,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     fontWeight: typography.fontWeight.medium,
   },
-
   loadingScreen: {
     flex: 1,
     justifyContent: "center",

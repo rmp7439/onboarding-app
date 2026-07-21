@@ -1,6 +1,5 @@
 import { OnboardingData } from '../context/OnboardingContext';
 
-// Maps mobile blood group selections to backend Prisma Enum
 export const mapBloodGroup = (bg: string): string => {
   const map: Record<string, string> = {
     "A+": "A_POSITIVE", "A-": "A_NEGATIVE", 
@@ -11,13 +10,31 @@ export const mapBloodGroup = (bg: string): string => {
   return map[bg] || "O_POSITIVE";
 };
 
-// Converts DD/MM/YYYY into an ISO DateTime string
+export const mapBloodGroupFromBackend = (bg: string): string => {
+  const map: Record<string, string> = {
+    "A_POSITIVE": "A+", "A_NEGATIVE": "A-", 
+    "B_POSITIVE": "B+", "B_NEGATIVE": "B-",
+    "AB_POSITIVE": "AB+", "AB_NEGATIVE": "AB-", 
+    "O_POSITIVE": "O+", "O_NEGATIVE": "O-"
+  };
+  return map[bg] || bg;
+};
+
 export const parseDateString = (dateStr: string): string => {
   const [day, month, year] = dateStr.split('/');
   return new Date(`${year}-${month}-${day}T00:00:00.000Z`).toISOString();
 };
 
-// Maps Onboarding Context directly to the API Schema
+export const formatDateForForm = (isoString: string): string => {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return isoString;
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 export const mapEmployeeData = (data: OnboardingData) => {
   return {
     firstName: data.personal.firstName,
@@ -49,7 +66,6 @@ export const mapEmployeeData = (data: OnboardingData) => {
   };
 };
 
-// Maps local document IDs to the Backend DocumentType Enum
 export const mapDocumentType = (id: string): string => {
   const map: Record<string, string> = {
     aadhaar: 'AADHAAR',

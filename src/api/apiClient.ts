@@ -2,7 +2,6 @@ import { Session } from '../utils/Session';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://onboarding-backend-9uf0.onrender.com/api";
 
-// Centralized fetch wrapper to handle tokens and global errors
 async function safeRequest(endpoint: string, options: RequestInit = {}) {
   try {
     const session = await Session.getEmployeeSession();
@@ -45,6 +44,13 @@ export const api = {
   registerEmployee: (employeeData: any) => {
     return safeRequest("/employee/register", {
       method: "POST",
+      body: JSON.stringify(employeeData),
+    });
+  },
+
+  updateEmployee: (id: string, employeeData: any) => {
+    return safeRequest(`/employee/${id}`, {
+      method: "PUT",
       body: JSON.stringify(employeeData),
     });
   },
