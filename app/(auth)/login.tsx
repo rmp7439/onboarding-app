@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput } from "react-native";
+import { View, StyleSheet, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import { Screen, Card, SectionTitle, Button } from "../../src/components";
 import { colors, spacing, typography, radius } from "../../src/theme";
@@ -7,15 +7,16 @@ import { lightImpact } from "../../src/utils/haptics";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [phone, setPhone] = useState("");
+  const [userId, setUserId] = useState("");
 
-  const isCorrect = phone.length === 10;
-  const showError = phone.length > 0 && phone.length < 10;
+  const trimmedUserId = userId.trim();
+  const isCorrect = trimmedUserId.length > 0;
 
   const handleContinue = () => {
     if (isCorrect) {
       lightImpact();
-      router.push({ pathname: "/otp", params: { mobile: phone } });
+      // Pass userId to the next screen instead of mobile
+      router.push({ pathname: "/otp", params: { userId: trimmedUserId } });
     }
   };
 
@@ -25,17 +26,16 @@ export default function LoginScreen() {
         <SectionTitle title="Sign In" style={styles.header} />
         <Card style={styles.card}>
           <TextInput
-            style={[styles.input, showError && styles.inputError]}
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="Mobile Number"
-            keyboardType="numeric"
-            maxLength={10}
+            style={styles.input}
+            value={userId}
+            onChangeText={setUserId}
+            placeholder="User ID"
+            autoCapitalize="none"
+            autoCorrect={false}
             placeholderTextColor={colors.textSecondary}
             returnKeyType="done"
             onSubmitEditing={handleContinue}
           />
-          {showError && <Text style={styles.errorText}>Invalid Phone Number</Text>}
         </Card>
       </View>
       <View style={styles.footer}>
@@ -64,16 +64,6 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.md,
     color: colors.text,
     backgroundColor: colors.surface,
-  },
-  inputError: {
-    borderColor: colors.error,
-    backgroundColor: "#FFFAFA",
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: typography.fontSize.sm,
-    marginTop: spacing.xs,
-    fontWeight: typography.fontWeight.medium,
   },
   footer: { paddingVertical: spacing.md, marginTop: spacing.md },
   button: { width: "100%" },

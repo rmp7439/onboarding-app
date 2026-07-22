@@ -13,7 +13,8 @@ import {
 
 export default function PasswordScreen() {
   const router = useRouter();
-  const { mobile } = useLocalSearchParams<{ mobile: string }>();
+  // Read userId from params
+  const { userId } = useLocalSearchParams<{ userId: string }>();
 
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,22 +30,21 @@ export default function PasswordScreen() {
     setErrorMsg(null);
 
     try {
-      // Removed the hardcoded fallback "9876543210"
-      const data = await api.userLogin(mobile, password);
+      // Call the API with the new identifier
+      const data = await api.userLogin(userId, password);
 
+      // Save the updated session format
       await Session.saveEmployeeSession({
         employeeId: data.user.id,
-        mobile: data.user.mobile,
+        userId: data.user.userId,
         token: data.token,
       });
 
       success();
       router.replace("/(onboarding)/home");
     } catch (err: unknown) {
-      // Removed the demo-token insertion backdoor entirely
       errorHaptic();
-      // Use the generic requested message
-      setErrorMsg("Invalid mobile number or password.");
+      setErrorMsg("Invalid User ID or password.");
     } finally {
       setIsLoading(false);
     }

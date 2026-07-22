@@ -23,7 +23,6 @@ async function safeRequest(endpoint: string, options: RequestInit = {}) {
     let result;
     const contentType = response.headers.get("content-type");
     
-    // Safely attempt JSON parsing only if the server explicitly returned JSON
     if (contentType && contentType.includes("application/json")) {
       try {
         result = await response.json();
@@ -31,7 +30,6 @@ async function safeRequest(endpoint: string, options: RequestInit = {}) {
         throw new Error("Invalid response from server. Please try again.");
       }
     } else {
-      // Gracefully map common non-JSON HTTP errors (like Proxy/HTML fallbacks)
       if (response.status === 401) throw new Error("401_UNAUTHORIZED");
       if (response.status === 404) throw new Error("404_NOT_FOUND");
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
@@ -40,7 +38,6 @@ async function safeRequest(endpoint: string, options: RequestInit = {}) {
     }
     
     if (!response.ok) {
-      // Elevate strict authentication/availability statuses to allow frontend routing
       if (response.status === 401) throw new Error("401_UNAUTHORIZED");
       if (response.status === 404) throw new Error("404_NOT_FOUND");
       
@@ -57,10 +54,11 @@ async function safeRequest(endpoint: string, options: RequestInit = {}) {
 }
 
 export const api = {
-  userLogin: (mobile: string, password: string) => {
+  // Updated from mobile to userId
+  userLogin: (userId: string, password: string) => {
     return safeRequest("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ mobile, password }),
+      body: JSON.stringify({ userId, password }),
     });
   },
 

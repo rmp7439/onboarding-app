@@ -4,7 +4,7 @@ const SESSION_KEY = '@employee_session';
 
 export interface EmployeeSession {
   employeeId: string;
-  mobile: string;
+  userId: string; // Updated from mobile to userId
   token: string;
 }
 
