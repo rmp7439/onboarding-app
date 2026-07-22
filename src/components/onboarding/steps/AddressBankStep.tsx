@@ -1,9 +1,10 @@
 import React, { useRef } from 'react';
 import { View, TextInput } from 'react-native';
-import { Input, SegmentedInput } from '../../index';
+import { Input, SegmentedInput, SearchableDropdown } from '../../index';
 import { FormSection } from '../FormSection';
 import { EmployeeFormData } from '../../../types/EmployeeForm';
 import { isValidNameInput, isValidAddressInput, allowOnlyNumbers } from '../../../utils/inputFilters';
+import { useIndianLocations } from '../../../hooks/useIndianLocations';
 
 interface StepProps {
   formData: EmployeeFormData;
@@ -14,14 +15,24 @@ interface StepProps {
 
 export function AddressBankStep({ formData, updateField, onNextStep, errors }: StepProps) {
   const currAddressRef = useRef<TextInput>(null);
-  const cityRef = useRef<TextInput>(null);
-  const stateRef = useRef<TextInput>(null);
+  const stateRef = useRef<any>(null);
+  const cityRef = useRef<any>(null);
   const pinCodeRef = useRef<TextInput>(null);
   const bankNameRef = useRef<TextInput>(null);
-  const accNumRef = useRef<{ focus: () => void }>(null);
-  const ifscRef = useRef<{ focus: () => void }>(null);
+  const accNumRef = useRef<any>(null);
+  const ifscRef = useRef<any>(null);
   const branchRef = useRef<TextInput>(null);
-  const micrRef = useRef<{ focus: () => void }>(null);
+  const micrRef = useRef<any>(null);
+
+  // Consume the clean geographical API hook
+  const { stateOptions, cityOptions } = useIndianLocations(formData.state);
+
+  const handleStateChange = (newState: string) => {
+    if (newState !== formData.state) {
+      updateField('state', newState);
+      updateField('city', ''); // Automatically clear city when state changes
+    }
+  };
 
   return (
     <View>
@@ -44,29 +55,31 @@ export function AddressBankStep({ formData, updateField, onNextStep, errors }: S
           onChangeText={(text) => { if (isValidAddressInput(text)) updateField('currentAddress', text); }} 
           multiline 
           returnKeyType="next"
-          onSubmitEditing={() => cityRef.current?.focus()}
-          submitBehavior="submit"
-        />
-        <Input 
-          ref={cityRef}
-          label="City" 
-          value={formData.city} 
-          error={errors.city}
-          onChangeText={(text) => { if (isValidNameInput(text)) updateField('city', text); }} 
-          returnKeyType="next"
           onSubmitEditing={() => stateRef.current?.focus()}
           submitBehavior="submit"
         />
-        <Input 
+        
+        <SearchableDropdown
           ref={stateRef}
-          label="State" 
-          value={formData.state} 
+          label="State"
+          placeholder="Select State"
+          value={formData.state}
           error={errors.state}
-          onChangeText={(text) => { if (isValidNameInput(text)) updateField('state', text); }} 
-          returnKeyType="next"
-          onSubmitEditing={() => pinCodeRef.current?.focus()}
-          submitBehavior="submit"
+          options={stateOptions}
+          onSelect={handleStateChange}
         />
+
+        <SearchableDropdown
+          ref={cityRef}
+          label="City"
+          placeholder="Select City"
+          value={formData.city}
+          error={errors.city}
+          options={cityOptions}
+          onSelect={(val) => updateField('city', val)}
+          disabled={!formData.state}
+        />
+
         <Input 
           ref={pinCodeRef}
           label="PIN Code" 

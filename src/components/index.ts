@@ -5,3 +5,4 @@ export * from './Card';
 export * from './SectionTitle';
 export * from './common/DateInput';
 export * from './common/SegmentedInput';
+export * from './common/SearchableDropdown';
