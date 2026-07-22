@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import React, { useRef, useState, useCallback } from "react";
 import {
   Animated,
   Pressable,
@@ -9,16 +9,47 @@ import {
   View,
 } from "react-native";
 import { Card, Screen, SectionTitle } from "../../src/components";
-import { colors, spacing, typography } from "../../src/theme";
+import { colors, spacing, typography, radius } from "../../src/theme";
 import { lightImpact } from "../../src/utils/haptics";
 import { useOnboarding } from "../../src/context/OnboardingContext";
+import { api } from "../../src/api/apiClient";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { resetData } = useOnboarding();
 
   const [isOperationsExpanded, setIsOperationsExpanded] = useState(true);
+  const [actionableCount, setActionableCount] = useState(0);
   const animation = useRef(new Animated.Value(1)).current;
+
+  // Refresh actionable application count whenever the Dashboard comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      const fetchActionableCount = async () => {
+        try {
+          const data = await api.getMyApplications();
+          if (isActive) {
+            const count = data.filter((app: any) =>
+              ["RETURNED_FOR_CORRECTION", "REJECTED"].includes(
+                app.status.toUpperCase()
+              )
+            ).length;
+            setActionableCount(count);
+          }
+        } catch (error) {
+          console.error("Failed to fetch applications for badge", error);
+        }
+      };
+
+      fetchActionableCount();
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   const toggleOperations = () => {
     lightImpact();
@@ -37,7 +68,7 @@ export default function HomeScreen() {
     router.push("/(onboarding)/new-guard/employee-details");
   };
 
-  // Adjusted height for 4 menu items (64px each = 256px total)
+  // Adjusted height for 5 menu items (64px each = 320px total)
   const contentHeight = animation.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 320],
@@ -78,7 +109,9 @@ export default function HomeScreen() {
               onPress={handleRegisterNew}
             >
               <Text style={styles.menuItemIcon}>📝</Text>
-              <Text style={styles.menuItemText}>Register New Employee</Text>
+              <View style={styles.menuItemTextContainer}>
+                <Text style={styles.menuItemText}>Register New Employee</Text>
+              </View>
             </Pressable>
 
             <Pressable
@@ -92,7 +125,9 @@ export default function HomeScreen() {
               }}
             >
               <Text style={styles.menuItemIcon}>📋</Text>
-              <Text style={styles.menuItemText}>My Applications</Text>
+              <View style={styles.menuItemTextContainer}>
+                <Text style={styles.menuItemText}>My Applications</Text>
+              </View>
             </Pressable>
 
             <Pressable
@@ -106,7 +141,17 @@ export default function HomeScreen() {
               }}
             >
               <Text style={styles.menuItemIcon}>✏️</Text>
-              <Text style={styles.menuItemText}>Edit Applications</Text>
+              <View style={styles.menuItemTextContainer}>
+                <Text style={styles.menuItemText}>Edit Applications</Text>
+              </View>
+              {/* Notification Badge */}
+              {actionableCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {actionableCount > 99 ? "99+" : actionableCount}
+                  </Text>
+                </View>
+              )}
             </Pressable>
 
             <Pressable
@@ -120,7 +165,9 @@ export default function HomeScreen() {
               }}
             >
               <Text style={styles.menuItemIcon}>👤</Text>
-              <Text style={styles.menuItemText}>My Profile</Text>
+              <View style={styles.menuItemTextContainer}>
+                <Text style={styles.menuItemText}>My Profile</Text>
+              </View>
             </Pressable>
 
             <Pressable
@@ -134,9 +181,11 @@ export default function HomeScreen() {
               }}
             >
               <Text style={styles.menuItemIcon}>🚪</Text>
-              <Text style={[styles.menuItemText, styles.logoutText]}>
-                Logout
-              </Text>
+              <View style={styles.menuItemTextContainer}>
+                <Text style={[styles.menuItemText, styles.logoutText]}>
+                  Logout
+                </Text>
+              </View>
             </Pressable>
           </Animated.View>
         </Card>
@@ -175,7 +224,6 @@ const styles = StyleSheet.create({
     height: 64,
   },
   menuItemPressed: { backgroundColor: colors.surface },
-  menuItemDisabled: { opacity: 0.6 },
   menuItemIcon: { fontSize: typography.fontSize.lg, marginRight: spacing.md },
   menuItemTextContainer: { flex: 1 },
   menuItemText: {
@@ -183,4 +231,18 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
   },
   logoutText: { color: colors.error },
+  badge: {
+    backgroundColor: "#F97316", // Vibrant orange
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    minWidth: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: {
+    color: colors.white,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+  },
 });
