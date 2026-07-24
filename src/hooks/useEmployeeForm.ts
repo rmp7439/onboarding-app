@@ -5,7 +5,7 @@ import { EmployeeFormData, NomineeForm } from "../types/EmployeeForm";
 export function useEmployeeForm() {
   const { data } = useOnboarding();
   const reqFields = data.unitConfig.requiredFields;
-  const isReq = (field: string) => reqFields.includes(field);
+  const isReq = useCallback((field: string) => reqFields.includes(field), [reqFields]);
 
   const [formData, setFormData] = useState<EmployeeFormData>(() => ({
     dateOfJoining: data.employment.joiningDate,
@@ -48,7 +48,7 @@ export function useEmployeeForm() {
 
   const [errors, setErrors] = useState<Partial<Record<keyof EmployeeFormData | string, string>>>({});
 
-  const updateField = (field: keyof EmployeeFormData, value: any) => {
+  const updateField = useCallback((field: keyof EmployeeFormData, value: any) => {
     setFormData((prev) => {
       if (prev[field] === value) return prev;
       const newData = { ...prev, [field]: value };
@@ -78,22 +78,33 @@ export function useEmployeeForm() {
       return newData;
     });
 
-    if (errors[field as string]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
+    setErrors((prev) => {
+      if (prev[field as string]) {
+        const updatedErrors = { ...prev };
+        delete updatedErrors[field as string];
+        return updatedErrors;
+      }
+      return prev;
+    });
+  }, []);
 
-  const updateNominee = (index: number, field: keyof NomineeForm, value: string) => {
+  const updateNominee = useCallback((index: number, field: keyof NomineeForm, value: string) => {
     setFormData((prev) => {
       const newNominees = [...prev.nominees];
       newNominees[index] = { ...newNominees[index], [field]: value };
       return { ...prev, nominees: newNominees };
     });
+    
     const errorKey = `nominee_${index}_${field}`;
-    if ((errors as any)[errorKey]) {
-      setErrors((prev) => ({ ...prev, [errorKey]: undefined }));
-    }
-  };
+    setErrors((prev) => {
+      if ((prev as any)[errorKey]) {
+        const updatedErrors = { ...prev };
+        delete (updatedErrors as any)[errorKey];
+        return updatedErrors;
+      }
+      return prev;
+    });
+  }, []);
 
   const validateStep = useCallback(
     (step: number): boolean => {
@@ -176,7 +187,7 @@ export function useEmployeeForm() {
       setErrors(newErrors);
       return isValid;
     },
-    [formData, reqFields],
+    [formData, isReq],
   );
 
   return {

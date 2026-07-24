@@ -12,7 +12,7 @@ interface StepProps {
   errors: Partial<Record<keyof EmployeeFormData | string, string>>;
 }
 
-export function BankNomineeStep({ formData, updateField, updateNominee, errors }: StepProps) {
+export const BankNomineeStep = React.memo(function BankNomineeStep({ formData, updateField, updateNominee, errors }: StepProps) {
   const bankNameRef = useRef<TextInput>(null);
   const accNumRef = useRef<any>(null);
   const ifscRef = useRef<any>(null);
@@ -103,40 +103,45 @@ export function BankNomineeStep({ formData, updateField, updateNominee, errors }
         />
       </FormSection>
 
-      {formData.nominees.map((nominee, index) => (
-        <FormSection key={index} title={`Nominee ${index + 1}`}>
-          <Input
-            label="Nominee Name"
-            value={nominee.name}
-            error={(errors as any)[`nominee_${index}_name`]}
-            onChangeText={(text) => updateNominee(index, 'name', text)}
-          />
-          <Input
-            label="Relationship"
-            value={nominee.relation}
-            error={(errors as any)[`nominee_${index}_relation`]}
-            onChangeText={(text) => updateNominee(index, 'relation', text)}
-          />
-          <Input
-            label="Mobile Number"
-            value={nominee.mobile}
-            error={(errors as any)[`nominee_${index}_mobile`]}
-            onChangeText={(text) => updateNominee(index, 'mobile', text.replace(/\D/g, '').substring(0, 10))}
-            keyboardType="number-pad"
-            maxLength={10}
-          />
-          {formData.nominees.length >= 2 && (
+      {formData.nominees.map((nominee, index) => {
+        // Dynamically assign title based on the total number of nominees
+        const title = formData.nominees.length === 1 ? "Nominee" : `Nominee ${index + 1}`;
+        
+        return (
+          <FormSection key={index} title={title}>
             <Input
-              label="Percentage Allocation (%)"
-              value={nominee.percentage}
-              error={(errors as any)[`nominee_${index}_percentage`]}
-              onChangeText={(text) => updateNominee(index, 'percentage', text.replace(/[^0-9]/g, '').replace(/^0+/, '').substring(0, 3))}
-              keyboardType="number-pad"
-              maxLength={3}
+              label="Nominee Name"
+              value={nominee.name}
+              error={(errors as any)[`nominee_${index}_name`]}
+              onChangeText={(text) => updateNominee(index, 'name', text)}
             />
-          )}
-        </FormSection>
-      ))}
+            <Input
+              label="Relationship"
+              value={nominee.relation}
+              error={(errors as any)[`nominee_${index}_relation`]}
+              onChangeText={(text) => updateNominee(index, 'relation', text)}
+            />
+            <Input
+              label="Mobile Number"
+              value={nominee.mobile}
+              error={(errors as any)[`nominee_${index}_mobile`]}
+              onChangeText={(text) => updateNominee(index, 'mobile', text.replace(/\D/g, '').substring(0, 10))}
+              keyboardType="number-pad"
+              maxLength={10}
+            />
+            {formData.nominees.length >= 2 && (
+              <Input
+                label="Percentage Allocation (%)"
+                value={nominee.percentage}
+                error={(errors as any)[`nominee_${index}_percentage`]}
+                onChangeText={(text) => updateNominee(index, 'percentage', text.replace(/[^0-9]/g, '').replace(/^0+/, '').substring(0, 3))}
+                keyboardType="number-pad"
+                maxLength={3}
+              />
+            )}
+          </FormSection>
+        );
+      })}
     </View>
   );
-}
+});
