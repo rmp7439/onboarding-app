@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Pressable, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Input, Card, SectionTitle } from '../../src/components';
-import { colors, spacing, typography, radius } from '../../src/theme';
+import { Screen, Input, Card } from '../../src/components';
+import { colors, spacing, typography } from '../../src/theme';
 import { api } from '../../src/api/apiClient';
 
 export default function ProfilesSearchScreen() {

@@ -37,14 +37,7 @@ export default function SuccessScreen() {
           </View>
         </View>
 
-        <Text style={styles.title}>Employee Registered Successfully</Text>
-
         <Card style={styles.detailsCard}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Registration ID</Text>
-            <Text style={styles.detailValue}>EMP-2026-001</Text>
-          </View>
-          <View style={styles.divider} />
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Registered On</Text>
             <Text style={styles.detailValue}>{currentDate}</Text>
