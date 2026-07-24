@@ -54,7 +54,6 @@ async function safeRequest(endpoint: string, options: RequestInit = {}) {
 }
 
 export const api = {
-  // Updated from mobile to userId
   userLogin: (userId: string, password: string) => {
     return safeRequest("/auth/login", {
       method: "POST",
@@ -138,11 +137,15 @@ export const api = {
     return safeRequest("/employee/my-applications", { method: "GET" });
   },
 
-  getActiveBanks: () => {
-    return safeRequest("/banks?active=true", { method: "GET" });
+  getUnits: () => {
+    return safeRequest("/units", { method: "GET" });
   },
 
   getBanks: () => {
     return safeRequest("/banks", { method: "GET" });
+  },
+
+  getActiveBanks: () => {
+    return safeRequest("/banks?active=true", { method: "GET" });
   },
 };

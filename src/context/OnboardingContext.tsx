@@ -10,45 +10,20 @@ export interface OnboardingData {
   isEditMode: boolean;
   editEmployeeId: string | null;
   existingDocuments: string[];
+  unitConfig: { requiredFields: string[] };
 
-  employment: { joiningDate: string; unit: string };
+  employment: { joiningDate: string; unit: string; };
   personal: {
-    firstName: string;
-    surname: string;
-    fatherName: string;
-    husbandName: string;
-    gender: string;
-    dob: string;
-    mobile: string;
-    bloodGroup: string;
-    maritalStatus: string;
-    highestEducation: string;
+    firstName: string; surname: string; fatherName: string;
+    husbandName: string; gender: string; dob: string;
+    mobile: string; bloodGroup: string; maritalStatus: string; highestEducation: string;
   };
-  identity: {
-    aadhaar: string;
-    pan: string;
-    uan: string;
-    esic: string;
-    drivingLicence: string;
+  identity: { aadhaar: string; pan: string; uan: string; esic: string; drivingLicence: string; };
+  address: { 
+    permanent: string; current: string; city: string; state: string; pinCode: string; 
+    permanentPoliceStation: string; currentCity: string; currentState: string; currentPinCode: string; 
   };
-  address: {
-    permanent: string;
-    current: string;
-    city: string;
-    state: string;
-    pinCode: string;
-    permanentPoliceStation: string;
-    currentCity: string;
-    currentState: string;
-    currentPinCode: string; // <-- Added
-  };
-  bank: {
-    accountHolderName: string;
-    bankName: string;
-    accountNumber: string;
-    ifsc: string;
-    micr: string;
-  };
+  bank: { accountHolderName: string; bankName: string; accountNumber: string; ifsc: string; micr: string; };
   emergencyContact: EmergencyContact;
   nominee: { name: string; relation: string; mobile: string; percentage: string; };
 
@@ -66,39 +41,20 @@ const INITIAL_DATA: OnboardingData = {
   isEditMode: false,
   editEmployeeId: null,
   existingDocuments: [],
+  unitConfig: { requiredFields: [] },
 
   employment: { joiningDate: "", unit: "" },
   personal: {
-    firstName: "",
-    surname: "",
-    fatherName: "",
-    husbandName: "",
-    gender: "",
-    dob: "",
-    mobile: "",
-    bloodGroup: "",
-    maritalStatus: "",
-    highestEducation: "",
+    firstName: "", surname: "", fatherName: "",
+    husbandName: "", gender: "", dob: "",
+    mobile: "", bloodGroup: "", maritalStatus: "", highestEducation: "",
   },
   identity: { aadhaar: "", pan: "", uan: "", esic: "", drivingLicence: "" },
-  address: {
-    permanent: "",
-    current: "",
-    city: "",
-    state: "",
-    pinCode: "",
-    permanentPoliceStation: "",
-    currentCity: "",
-    currentState: "",
-    currentPinCode: "", // <-- Added
+  address: { 
+    permanent: "", current: "", city: "", state: "", pinCode: "",
+    permanentPoliceStation: "", currentCity: "", currentState: "", currentPinCode: "" 
   },
-  bank: {
-    accountHolderName: "",
-    bankName: "",
-    accountNumber: "",
-    ifsc: "",
-    micr: "",
-  },
+  bank: { accountHolderName: "", bankName: "", accountNumber: "", ifsc: "", micr: "" },
   emergencyContact: { name: "", relation: "", mobile: "" },
   nominee: { name: "", relation: "", mobile: "", percentage: "" },
 
@@ -106,9 +62,7 @@ const INITIAL_DATA: OnboardingData = {
   uploadedDocuments: [],
 };
 
-const OnboardingContext = createContext<OnboardingContextType | undefined>(
-  undefined,
-);
+const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<OnboardingData>(INITIAL_DATA);

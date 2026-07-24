@@ -7,12 +7,16 @@ interface OptionSelectorProps {
   options: string[];
   selectedValue: string;
   onSelect: (val: string) => void;
+  required?: boolean;
 }
 
-export function OptionSelector({ label, options, selectedValue, onSelect }: OptionSelectorProps) {
+export function OptionSelector({ label, options, selectedValue, onSelect, required }: OptionSelectorProps) {
   return (
     <View style={styles.selectorContainer}>
-      <Text style={styles.selectorLabel}>{label}</Text>
+      <Text style={styles.selectorLabel}>
+        {label}
+        {required && <Text style={{ color: colors.error }}> *</Text>}
+      </Text>
       <View style={styles.optionsWrapper}>
         {options.map((opt) => {
           const isActive = selectedValue === opt;

@@ -1,8 +1,9 @@
-import React, { use, useRef } from 'react';
+import React, { useRef } from 'react';
 import { View, TextInput } from 'react-native';
-import { Input } from '../../index'; 
+import { Input } from '../../index';
 import { FormSection } from '../FormSection';
 import { EmployeeFormData } from '../../../types/EmployeeForm';
+import { useOnboarding } from '../../../context/OnboardingContext';
 
 interface StepProps {
   formData: EmployeeFormData;
@@ -12,6 +13,9 @@ interface StepProps {
 }
 
 export function IdentityStep({ formData, updateField, onNextStep, errors }: StepProps) {
+  const { data } = useOnboarding();
+  const isReq = (f: string) => data.unitConfig.requiredFields.includes(f);
+
   const panRef = useRef<TextInput>(null);
   const uanRef = useRef<TextInput>(null);
   const esicRef = useRef<TextInput>(null);
@@ -28,6 +32,7 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           returnKeyType="next"
           onSubmitEditing={() => panRef.current?.focus()}
           submitBehavior="submit"
+          required={isReq('aadhaar')}
         />
         
         <Input
@@ -40,6 +45,7 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           returnKeyType="next"
           onSubmitEditing={() => uanRef.current?.focus()}
           submitBehavior="submit"
+          required={isReq('pan')}
         />
         
         <Input
@@ -52,6 +58,7 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           returnKeyType="next"
           onSubmitEditing={() => esicRef.current?.focus()}
           submitBehavior="submit"
+          required={isReq('uan')}
         />
         
         <Input 
@@ -64,17 +71,19 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           returnKeyType="next"
           onSubmitEditing={() => dlRef.current?.focus()}
           submitBehavior="submit"
+          required={isReq('esic')}
         />
 
         <Input 
           ref={dlRef}
-          label="Driving Licence (Optional)" 
+          label="Driving Licence" 
           value={formData.drivingLicence}
           error={errors.drivingLicence} 
           onChangeText={(text) => updateField('drivingLicence', text)} 
           keyboardType="default"
           returnKeyType="done"
           onSubmitEditing={onNextStep}
+          required={isReq('drivingLicence')}
         />
       </FormSection>
     </View>

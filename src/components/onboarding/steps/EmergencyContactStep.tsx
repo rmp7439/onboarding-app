@@ -3,6 +3,7 @@ import { View, TextInput } from 'react-native';
 import { Input } from '../../index';
 import { FormSection } from '../FormSection';
 import { EmployeeFormData } from '../../../types/EmployeeForm';
+import { useOnboarding } from '../../../context/OnboardingContext';
 
 interface StepProps {
   formData: EmployeeFormData;
@@ -12,10 +13,12 @@ interface StepProps {
 }
 
 export function EmergencyContactStep({ formData, updateField, onNextStep, errors }: StepProps) {
+  const { data } = useOnboarding();
+  const isReq = (f: string) => data.unitConfig.requiredFields.includes(f);
+
   const relationRef = useRef<TextInput>(null);
   const mobileRef = useRef<TextInput>(null);
   
-  // <-- Added Nominee Refs -->
   const nomNameRef = useRef<TextInput>(null);
   const nomRelRef = useRef<TextInput>(null);
   const nomMobileRef = useRef<TextInput>(null);
@@ -32,6 +35,7 @@ export function EmergencyContactStep({ formData, updateField, onNextStep, errors
           returnKeyType="next"
           onSubmitEditing={() => relationRef.current?.focus()}
           submitBehavior="submit"
+          required
         />
         <Input 
           ref={relationRef}
@@ -42,6 +46,7 @@ export function EmergencyContactStep({ formData, updateField, onNextStep, errors
           returnKeyType="next"
           onSubmitEditing={() => mobileRef.current?.focus()}
           submitBehavior="submit"
+          required
         />
         <Input 
           ref={mobileRef}
@@ -51,12 +56,12 @@ export function EmergencyContactStep({ formData, updateField, onNextStep, errors
           onChangeText={(text) => updateField('em1Mobile', text.replace(/\D/g, '').substring(0, 10))} 
           keyboardType="number-pad" 
           maxLength={10} 
-          returnKeyType="next" // Changed from "done" to "next"
-          onSubmitEditing={() => nomNameRef.current?.focus()} // Route to nominee
+          returnKeyType="next" 
+          onSubmitEditing={() => nomNameRef.current?.focus()}
+          required
         />
       </FormSection>
 
-      {/* <-- ADDED NOMINEE SECTION --> */}
       <FormSection title="Nominee Details">
         <Input 
           ref={nomNameRef}
@@ -67,6 +72,7 @@ export function EmergencyContactStep({ formData, updateField, onNextStep, errors
           returnKeyType="next"
           onSubmitEditing={() => nomRelRef.current?.focus()}
           submitBehavior="submit"
+          required={isReq('nomineeName')}
         />
         <Input 
           ref={nomRelRef}
@@ -77,6 +83,7 @@ export function EmergencyContactStep({ formData, updateField, onNextStep, errors
           returnKeyType="next"
           onSubmitEditing={() => nomMobileRef.current?.focus()}
           submitBehavior="submit"
+          required={isReq('nomineeRelation')}
         />
         <Input 
           ref={nomMobileRef}
@@ -88,6 +95,7 @@ export function EmergencyContactStep({ formData, updateField, onNextStep, errors
           maxLength={10} 
           returnKeyType="next"
           onSubmitEditing={() => nomPercRef.current?.focus()}
+          required={isReq('nomineeMobile')}
         />
         <Input 
           ref={nomPercRef}
@@ -99,6 +107,7 @@ export function EmergencyContactStep({ formData, updateField, onNextStep, errors
           maxLength={3} 
           returnKeyType="done"
           onSubmitEditing={onNextStep}
+          required={isReq('nomineePercentage')}
         />
       </FormSection>
     </View>
