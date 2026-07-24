@@ -10,7 +10,6 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
 import { Screen, Card, SectionTitle, Button } from "../../../src/components";
 import { useImagePickerAction } from "../../../src/hooks/useImagePickerAction";
 import { useOnboarding } from "../../../src/context/OnboardingContext";
@@ -21,7 +20,6 @@ import {
 } from "../../../src/utils/dataMappers";
 import { DocumentItem } from "../../../src/types/Document";
 import { colors, spacing, typography, radius } from "../../../src/theme";
-import { IMAGE_QUALITY } from "../../../src/constants/App";
 import { RecentEmployeeStore } from "../../../src/utils/RecentEmployeeStore";
 import {
   lightImpact,
@@ -30,83 +28,34 @@ import {
 } from "../../../src/utils/haptics";
 
 const INITIAL_DOCUMENTS: DocumentItem[] = [
-  {
-    id: "aadhaar",
-    title: "Aadhaar Card",
-    uri: null,
-    filename: null,
-    required: true,
-  },
+  { id: "aadhaar", title: "Aadhaar Card", uri: null, filename: null, required: true },
   { id: "pan", title: "PAN Card", uri: null, filename: null, required: false },
-  {
-    id: "driving",
-    title: "Driving Licence",
-    uri: null,
-    filename: null,
-    required: false,
-  },
-  {
-    id: "bank",
-    title: "Bank Passbook",
-    uri: null,
-    filename: null,
-    required: false,
-  },
-  {
-    id: "education",
-    title: "Education Proof",
-    uri: null,
-    filename: null,
-    required: false,
-  },
-  {
-    id: "voter",
-    title: "Voter ID Card",
-    uri: null,
-    filename: null,
-    required: false,
-  },
-  {
-    id: "discharge",
-    title: "Discharge Book",
-    uri: null,
-    filename: null,
-    required: false,
-  },
+  { id: "driving", title: "Driving Licence", uri: null, filename: null, required: false },
+  { id: "bank", title: "Bank Passbook", uri: null, filename: null, required: false },
+  { id: "education", title: "Education Proof", uri: null, filename: null, required: false },
+  { id: "voter", title: "Voter ID Card", uri: null, filename: null, required: false },
+  { id: "discharge", title: "Discharge Book", uri: null, filename: null, required: false },
 ];
 
 export default function DocumentsScreen() {
   const router = useRouter();
   const { data, updateData, resetData } = useOnboarding();
   const { openPicker, PickerComponent } = useImagePickerAction();
+  
   const [documents, setDocuments] = useState<DocumentItem[]>(INITIAL_DOCUMENTS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
-  const [registeredEmployeeId, setRegisteredEmployeeId] = useState<
-    string | null
-  >(null);
+  const [registeredEmployeeId, setRegisteredEmployeeId] = useState<string | null>(null);
   const [isSelfieUploaded, setIsSelfieUploaded] = useState(false);
   const [completedDocUploads, setCompletedDocUploads] = useState<string[]>([]);
 
-  // Pre-fill existing documents from context
   useEffect(() => {
-    if (
-      data.isEditMode &&
-      data.existingDocuments &&
-      data.existingDocuments.length > 0
-    ) {
+    if (data.isEditMode && data.existingDocuments && data.existingDocuments.length > 0) {
       const backendToFrontendMap: Record<string, string> = {
-        AADHAAR: "aadhaar",
-        PAN: "pan",
-        DRIVING_LICENSE: "driving",
-        BANK_PASSBOOK: "bank",
-        EDUCATION: "education",
-        VOTER_ID: "voter",
-        DISCHARGE_BOOK: "discharge",
+        AADHAAR: "aadhaar", PAN: "pan", DRIVING_LICENSE: "driving",
+        BANK_PASSBOOK: "bank", EDUCATION: "education", VOTER_ID: "voter", DISCHARGE_BOOK: "discharge",
       };
-      const existingIds = data.existingDocuments.map(
-        (type) => backendToFrontendMap[type],
-      );
+      const existingIds = data.existingDocuments.map((type) => backendToFrontendMap[type]);
 
       setDocuments((prev) =>
         prev.map((doc) =>
@@ -118,44 +67,16 @@ export default function DocumentsScreen() {
     }
   }, [data.isEditMode, data.existingDocuments]);
 
-  const handlePickImage = async (id: string, source: "gallery" | "camera") => {
-    try {
-      setErrorText(null);
-      let result;
-      if (source === "gallery") {
-        result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: IMAGE_QUALITY,
-        });
-      } else {
-        await ImagePicker.requestCameraPermissionsAsync();
-        result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: IMAGE_QUALITY,
-        });
-      }
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        const filename =
-          asset.fileName || asset.uri.split("/").pop() || "document.jpg";
-        setDocuments((prev) =>
-          prev.map((doc) =>
-            doc.id === id ? { ...doc, uri: asset.uri, filename } : doc,
-          ),
-        );
-      }
-    } catch (error: any) {
-      setErrorText(error.message || "Failed to access media.");
-    }
+  // Delegating the processing entirely to the unified hook
+  const handlePickImage = (id: string, uri: string, filename: string) => {
+    setErrorText(null);
+    setDocuments((prev) => prev.map((doc) => doc.id === id ? { ...doc, uri, filename } : doc));
   };
 
   const handleRemove = (id: string) => {
     lightImpact();
     setDocuments((prev) =>
-      prev.map((doc) =>
-        doc.id === id ? { ...doc, uri: null, filename: null } : doc,
-      ),
+      prev.map((doc) => doc.id === id ? { ...doc, uri: null, filename: null } : doc),
     );
   };
 
@@ -170,33 +91,24 @@ export default function DocumentsScreen() {
       let empId = registeredEmployeeId;
       const mappedData = mapEmployeeData(data);
 
-      // Submission Logic Route
       if (data.isEditMode && data.editEmployeeId) {
         empId = data.editEmployeeId;
-        await api.updateEmployee(empId, mappedData); // PUT logic
+        await api.updateEmployee(empId, mappedData); 
       } else {
         if (!empId) {
-          const result = await api.registerEmployee(mappedData); // POST logic
+          const result = await api.registerEmployee(mappedData); 
           empId = result.id;
           setRegisteredEmployeeId(empId);
           await RecentEmployeeStore.saveId(result.id);
         }
       }
 
-      // Upload selfie if it was changed
-      if (
-        data.selfieUri &&
-        data.selfieUri !== "EXISTING" &&
-        !isSelfieUploaded
-      ) {
+      if (data.selfieUri && data.selfieUri !== "EXISTING" && !isSelfieUploaded) {
         await api.uploadSelfie(empId!, data.selfieUri);
         setIsSelfieUploaded(true);
       }
 
-      // Upload documents that are strictly NOT marked as EXISTING
-      const docsToUpload = documents.filter(
-        (doc) => doc.uri !== null && doc.uri !== "EXISTING",
-      );
+      const docsToUpload = documents.filter((doc) => doc.uri !== null && doc.uri !== "EXISTING");
       for (let i = 0; i < docsToUpload.length; i++) {
         const doc = docsToUpload[i];
         if (completedDocUploads.includes(doc.id)) continue;
@@ -206,22 +118,14 @@ export default function DocumentsScreen() {
         setCompletedDocUploads((prev) => [...prev, doc.id]);
       }
 
-      const finalDocNames = documents
-        .filter((d) => d.uri !== null)
-        .map((doc) => doc.title);
+      const finalDocNames = documents.filter((d) => d.uri !== null).map((doc) => doc.title);
       updateData({ uploadedDocuments: finalDocNames });
 
       success();
 
       if (data.isEditMode) {
         Alert.alert("Success", "Application resubmitted successfully.", [
-          {
-            text: "OK",
-            onPress: () => {
-              resetData();
-              router.replace("/(onboarding)/home");
-            },
-          },
+          { text: "OK", onPress: () => { resetData(); router.replace("/(onboarding)/home"); } },
         ]);
       } else {
         router.push("/(onboarding)/new-guard/success");
@@ -237,15 +141,9 @@ export default function DocumentsScreen() {
     return (
       <Screen style={styles.loadingScreen} scrollable={false}>
         <View style={styles.loadingContent}>
-          <ActivityIndicator
-            size="large"
-            color={colors.primary}
-            style={styles.loaderIcon}
-          />
+          <ActivityIndicator size="large" color={colors.primary} style={styles.loaderIcon} />
           <Text style={styles.loadingTitle}>Uploading documents...</Text>
-          <Text style={styles.loadingSubtitle}>
-            Please wait while your documents are being uploaded.
-          </Text>
+          <Text style={styles.loadingSubtitle}>Please wait while your documents are being uploaded.</Text>
         </View>
       </Screen>
     );
@@ -255,19 +153,12 @@ export default function DocumentsScreen() {
   const optionalDocs = documents.filter((doc) => !doc.required);
   const isContinueEnabled = requiredDocs.every((doc) => doc.uri !== null);
 
-  const renderDocumentRow = (
-    doc: DocumentItem,
-    index: number,
-    total: number,
-  ) => {
+  const renderDocumentRow = (doc: DocumentItem, index: number, total: number) => {
     const isLast = index === total - 1;
     const isExisting = doc.uri === "EXISTING";
 
     return (
-      <View
-        key={doc.id}
-        style={[styles.rowContainer, !isLast && styles.rowBorder]}
-      >
+      <View key={doc.id} style={[styles.rowContainer, !isLast && styles.rowBorder]}>
         <View style={styles.rowHeader}>
           <Text style={styles.docTitle}>{doc.title}</Text>
           {doc.uri ? (
@@ -275,9 +166,7 @@ export default function DocumentsScreen() {
               <Text style={styles.uploadedBadgeText}>✓ Attached</Text>
             </View>
           ) : (
-            <Text
-              style={[styles.optionalText, doc.required && styles.requiredText]}
-            >
+            <Text style={[styles.optionalText, doc.required && styles.requiredText]}>
               {doc.required ? "Required" : "Optional"}
             </Text>
           )}
@@ -291,10 +180,7 @@ export default function DocumentsScreen() {
               disabled={isSubmitting}
               onPress={() => {
                 lightImpact();
-                openPicker(
-                  () => handlePickImage(doc.id, "camera"),
-                  () => handlePickImage(doc.id, "gallery"),
-                );
+                openPicker((uri, filename) => handlePickImage(doc.id, uri, filename));
               }}
               style={styles.actionButton}
             />
@@ -303,21 +189,11 @@ export default function DocumentsScreen() {
           <View style={styles.attachmentContainer}>
             <View style={styles.fileInfoRow}>
               {!isExisting && (
-                <Image
-                  source={{ uri: doc.uri }}
-                  style={styles.thumbnail}
-                  resizeMode="cover"
-                />
+                <Image source={{ uri: doc.uri }} style={styles.thumbnail} resizeMode="cover" />
               )}
               <View style={styles.fileDetails}>
                 <Text
-                  style={[
-                    styles.filenameText,
-                    isExisting && {
-                      fontStyle: "italic",
-                      color: colors.textSecondary,
-                    },
-                  ]}
+                  style={[styles.filenameText, isExisting && { fontStyle: "italic", color: colors.textSecondary }]}
                   numberOfLines={1}
                   ellipsizeMode="middle"
                 >
@@ -332,10 +208,7 @@ export default function DocumentsScreen() {
                 disabled={isSubmitting}
                 onPress={() => {
                   lightImpact();
-                  openPicker(
-                    () => handlePickImage(doc.id, "camera"),
-                    () => handlePickImage(doc.id, "gallery"),
-                  );
+                  openPicker((uri, filename) => handlePickImage(doc.id, uri, filename));
                 }}
                 style={styles.halfBtn}
               />
@@ -356,27 +229,16 @@ export default function DocumentsScreen() {
 
   return (
     <Screen scrollable={false} style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <SectionTitle title="Required Document" style={styles.sectionHeader} />
         <Card style={styles.listCard}>
-          {requiredDocs.map((doc, index) =>
-            renderDocumentRow(doc, index, requiredDocs.length),
-          )}
+          {requiredDocs.map((doc, index) => renderDocumentRow(doc, index, requiredDocs.length))}
         </Card>
         {optionalDocs.length > 0 && (
           <>
-            <SectionTitle
-              title="Additional Documents"
-              style={[styles.sectionHeader, styles.marginTop]}
-            />
+            <SectionTitle title="Additional Documents" style={[styles.sectionHeader, styles.marginTop]} />
             <Card style={styles.listCard}>
-              {optionalDocs.map((doc, index) =>
-                renderDocumentRow(doc, index, optionalDocs.length),
-              )}
+              {optionalDocs.map((doc, index) => renderDocumentRow(doc, index, optionalDocs.length))}
             </Card>
           </>
         )}
@@ -395,7 +257,6 @@ export default function DocumentsScreen() {
   );
 }
 
-// ... styles remain unchanged
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollView: { flex: 1 },
@@ -404,7 +265,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: spacing["2xl"],
   },
-  header: { marginBottom: spacing.md },
   sectionHeader: { marginBottom: spacing.sm },
   marginTop: { marginTop: spacing.xl },
   listCard: {

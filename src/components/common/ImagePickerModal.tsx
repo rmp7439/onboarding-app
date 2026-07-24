@@ -12,17 +12,19 @@ import { colors, spacing, typography, radius } from "../../theme";
 interface ImagePickerModalProps {
   visible: boolean;
   onClose: () => void;
-  onCamera: () => void;
+  onFrontCamera: () => void;
+  onRearCamera: () => void;
   onGallery: () => void;
 }
 
 export default function ImagePickerModal({
   visible,
   onClose,
-  onCamera,
+  onFrontCamera,
+  onRearCamera,
   onGallery,
 }: ImagePickerModalProps) {
-  if (Platform.OS === "ios") return null; // iOS uses native ActionSheet
+  if (Platform.OS === "ios") return null; 
 
   return (
     <Modal
@@ -34,21 +36,32 @@ export default function ImagePickerModal({
       <View style={styles.modalOverlay}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={styles.bottomSheet}>
-          <Text style={styles.sheetTitle}>Upload Document</Text>
+          <Text style={styles.sheetTitle}>Select Image</Text>
+          
           <Pressable
             style={styles.sheetButton}
             android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-            onPress={onCamera}
+            onPress={onFrontCamera}
           >
-            <Text style={styles.sheetButtonText}>Take Photo</Text>
+            <Text style={styles.sheetButtonText}>📷 Take Selfie</Text>
           </Pressable>
+          
+          <Pressable
+            style={styles.sheetButton}
+            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+            onPress={onRearCamera}
+          >
+            <Text style={styles.sheetButtonText}>📸 Use Rear Camera</Text>
+          </Pressable>
+          
           <Pressable
             style={styles.sheetButton}
             android_ripple={{ color: "rgba(0,0,0,0.1)" }}
             onPress={onGallery}
           >
-            <Text style={styles.sheetButtonText}>Choose from Gallery</Text>
+            <Text style={styles.sheetButtonText}>🖼 Choose from Gallery</Text>
           </Pressable>
+          
           <Pressable
             style={[styles.sheetButton, styles.sheetCancelButton]}
             android_ripple={{ color: "rgba(0,0,0,0.1)" }}

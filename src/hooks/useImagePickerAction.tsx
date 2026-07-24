@@ -1,45 +1,91 @@
 import React, { useState, useRef } from 'react';
-import { Platform, ActionSheetIOS } from 'react-native';
+import { Platform, ActionSheetIOS, Alert } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import ImagePickerModal from '../components/common/ImagePickerModal';
+import { SharedCameraModal } from '../components/common/SharedCameraModal';
+import { IMAGE_QUALITY } from '../constants/App';
 
 export function useImagePickerAction() {
   const [isModalVisible, setModalVisible] = useState(false);
+  const [isCameraVisible, setCameraVisible] = useState(false);
   
-  // Use a ref to store callbacks instead of state to prevent unnecessary re-renders
-  const callbacks = useRef<{ onCamera: () => void, onGallery: () => void } | null>(null);
+  // Track requested camera facing independently
+  const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('front');
+  
+  const callbacks = useRef<{ onSelect: (uri: string, filename: string) => void } | null>(null);
 
-  const openPicker = (onCamera: () => void, onGallery: () => void) => {
+  // Dedicated Launch Paths
+  const launchFrontCamera = () => {
+    setModalVisible(false);
+    setCameraFacing('front');
+    setTimeout(() => setCameraVisible(true), Platform.OS === 'ios' ? 300 : 0);
+  };
+
+  const launchRearCamera = () => {
+    setModalVisible(false);
+    setCameraFacing('back');
+    setTimeout(() => setCameraVisible(true), Platform.OS === 'ios' ? 300 : 0);
+  };
+
+  const launchGallery = async () => {
+    setModalVisible(false);
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert("Permission Denied", "Gallery access is required to choose photos.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: IMAGE_QUALITY,
+        allowsEditing: true, // Native cropping
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const filename = asset.fileName || asset.uri.split("/").pop() || "image.jpg";
+        if (callbacks.current) callbacks.current.onSelect(asset.uri, filename);
+      }
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to open gallery.");
+    }
+  };
+
+  const openPicker = (onSelect: (uri: string, filename: string) => void) => {
+    callbacks.current = { onSelect };
+    
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
-        { options: ['Cancel', 'Take Photo', 'Choose from Gallery'], cancelButtonIndex: 0 },
+        { options: ['Cancel', '📷 Take Selfie', '📸 Take Photo', '🖼 Choose from Gallery'], cancelButtonIndex: 0 },
         (buttonIndex) => {
-          if (buttonIndex === 1) onCamera();
-          if (buttonIndex === 2) onGallery();
+          if (buttonIndex === 1) launchFrontCamera();
+          if (buttonIndex === 2) launchRearCamera();
+          if (buttonIndex === 3) launchGallery();
         }
       );
     } else {
-      callbacks.current = { onCamera, onGallery };
       setModalVisible(true);
     }
   };
 
-  const handleCamera = () => {
-    setModalVisible(false);
-    if (callbacks.current) callbacks.current.onCamera();
-  };
-
-  const handleGallery = () => {
-    setModalVisible(false);
-    if (callbacks.current) callbacks.current.onGallery();
-  };
-
   const PickerComponent = () => (
-    <ImagePickerModal
-      visible={isModalVisible}
-      onClose={() => setModalVisible(false)}
-      onCamera={handleCamera}
-      onGallery={handleGallery}
-    />
+    <>
+      <ImagePickerModal
+        visible={isModalVisible}
+        onClose={() => setModalVisible(false)}
+        onFrontCamera={launchFrontCamera}
+        onRearCamera={launchRearCamera}
+        onGallery={launchGallery}
+      />
+      <SharedCameraModal
+        visible={isCameraVisible}
+        cameraFacing={cameraFacing}
+        onClose={() => setCameraVisible(false)}
+        onCapture={(uri: string, filename: string) => {
+          setCameraVisible(false);
+          if (callbacks.current) callbacks.current.onSelect(uri, filename);
+        }}
+      />
+    </>
   );
 
   return { openPicker, PickerComponent };
