@@ -14,6 +14,12 @@ interface StepProps {
 export function EmergencyContactStep({ formData, updateField, onNextStep, errors }: StepProps) {
   const relationRef = useRef<TextInput>(null);
   const mobileRef = useRef<TextInput>(null);
+  
+  // <-- Added Nominee Refs -->
+  const nomNameRef = useRef<TextInput>(null);
+  const nomRelRef = useRef<TextInput>(null);
+  const nomMobileRef = useRef<TextInput>(null);
+  const nomPercRef = useRef<TextInput>(null);
 
   return (
     <View>
@@ -45,6 +51,52 @@ export function EmergencyContactStep({ formData, updateField, onNextStep, errors
           onChangeText={(text) => updateField('em1Mobile', text.replace(/\D/g, '').substring(0, 10))} 
           keyboardType="number-pad" 
           maxLength={10} 
+          returnKeyType="next" // Changed from "done" to "next"
+          onSubmitEditing={() => nomNameRef.current?.focus()} // Route to nominee
+        />
+      </FormSection>
+
+      {/* <-- ADDED NOMINEE SECTION --> */}
+      <FormSection title="Nominee Details">
+        <Input 
+          ref={nomNameRef}
+          label="Nominee Name" 
+          value={formData.nomineeName} 
+          error={errors.nomineeName}
+          onChangeText={(text) => updateField('nomineeName', text)} 
+          returnKeyType="next"
+          onSubmitEditing={() => nomRelRef.current?.focus()}
+          submitBehavior="submit"
+        />
+        <Input 
+          ref={nomRelRef}
+          label="Relationship" 
+          value={formData.nomineeRelation} 
+          error={errors.nomineeRelation}
+          onChangeText={(text) => updateField('nomineeRelation', text)} 
+          returnKeyType="next"
+          onSubmitEditing={() => nomMobileRef.current?.focus()}
+          submitBehavior="submit"
+        />
+        <Input 
+          ref={nomMobileRef}
+          label="Mobile Number" 
+          value={formData.nomineeMobile} 
+          error={errors.nomineeMobile}
+          onChangeText={(text) => updateField('nomineeMobile', text.replace(/\D/g, '').substring(0, 10))} 
+          keyboardType="number-pad" 
+          maxLength={10} 
+          returnKeyType="next"
+          onSubmitEditing={() => nomPercRef.current?.focus()}
+        />
+        <Input 
+          ref={nomPercRef}
+          label="Nominee Percentage (%)" 
+          value={formData.nomineePercentage} 
+          error={errors.nomineePercentage}
+          onChangeText={(text) => updateField('nomineePercentage', text.replace(/\D/g, '').substring(0, 3))} 
+          keyboardType="number-pad" 
+          maxLength={3} 
           returnKeyType="done"
           onSubmitEditing={onNextStep}
         />

@@ -112,6 +112,10 @@ export const mapEmployeeData = (data: OnboardingData) => {
     emergencyName: data.emergencyContact.name,
     emergencyRelation: data.emergencyContact.relation,
     emergencyPhone: data.emergencyContact.mobile,
+    nomineeName: data.nominee.name,                          
+    nomineeRelation: data.nominee.relation,                  
+    nomineeMobile: data.nominee.mobile,                      
+    nomineePercentage: parseInt(data.nominee.percentage, 10),
   };
 };
 

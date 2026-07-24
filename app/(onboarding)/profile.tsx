@@ -53,6 +53,10 @@ interface EmployeeProfile {
   emergencyName?: string;
   emergencyRelation?: string;
   emergencyPhone?: string;
+  nomineeName?: string;       
+  nomineeRelation?: string;   
+  nomineeMobile?: string;     
+  nomineePercentage?: number; 
   documents?: { id: string; type: string; originalFilename: string }[];
   uploadedAt?: string;
   updatedAt?: string;
@@ -226,7 +230,6 @@ export default function ProfileScreen() {
   const isReturned = profile.status.toUpperCase() === "RETURNED_FOR_CORRECTION";
   const isRejected = profile.status.toUpperCase() === "REJECTED";
 
-  // Requirement: Display Continue Editing button ONLY for RETURNED_FOR_CORRECTION or REJECTED
   const canEdit = isReturned || isRejected;
 
   return (
@@ -303,7 +306,6 @@ export default function ProfileScreen() {
           <Text style={styles.detailLabel}>Blood Group</Text>
           <Text style={styles.detailValue}>{profile.bloodGroup}</Text>
         </View>
-        <View style={styles.divider} />
         <View style={styles.divider} />
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Marital Status</Text>
@@ -425,6 +427,49 @@ export default function ProfileScreen() {
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>MICR Code</Text>
           <Text style={styles.detailValue}>{profile.micr || "N/A"}</Text>
+        </View>
+      </Card>
+
+      {/* Emergency Contact Card */}
+      <Card style={styles.detailsCard}>
+        <SectionTitle title="Emergency Contact" style={{ marginBottom: 12, marginTop: 0 }} />
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Contact Name</Text>
+          <Text style={styles.detailValue}>{profile.emergencyName || "N/A"}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Relationship</Text>
+          <Text style={styles.detailValue}>{profile.emergencyRelation || "N/A"}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Phone Number</Text>
+          <Text style={styles.detailValue}>{profile.emergencyPhone ? `+91 ${profile.emergencyPhone}` : "N/A"}</Text>
+        </View>
+      </Card>
+
+      {/* Nominee Details Card */}
+      <Card style={styles.detailsCard}>
+        <SectionTitle title="Nominee Details" style={{ marginBottom: 12, marginTop: 0 }} />
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Nominee Name</Text>
+          <Text style={styles.detailValue}>{profile.nomineeName || "N/A"}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Relationship</Text>
+          <Text style={styles.detailValue}>{profile.nomineeRelation || "N/A"}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Mobile Number</Text>
+          <Text style={styles.detailValue}>{profile.nomineeMobile ? `+91 ${profile.nomineeMobile}` : "N/A"}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Percentage</Text>
+          <Text style={styles.detailValue}>{profile.nomineePercentage ? `${profile.nomineePercentage}%` : "N/A"}</Text>
         </View>
       </Card>
 

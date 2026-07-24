@@ -55,6 +55,12 @@ export const startEditingApplication = (
       relation: profile.emergencyRelation || "",
       mobile: profile.emergencyPhone || "",
     },
+    nominee: {                                                          
+      name: profile.nomineeName || "",                                  
+      relation: profile.nomineeRelation || "",                          
+      mobile: profile.nomineeMobile || "",                              
+      percentage: profile.nomineePercentage ? profile.nomineePercentage.toString() : "", 
+    },
     selfieUri: profile.selfieUrl || profile.selfieFilename ? "EXISTING" : null,
     existingDocuments: profile.documents?.map((d: any) => d.type) || [],
   });

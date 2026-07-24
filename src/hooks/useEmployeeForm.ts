@@ -40,6 +40,10 @@ export function useEmployeeForm() {
     em1Name: data.emergencyContact.name,
     em1Relation: data.emergencyContact.relation,
     em1Mobile: data.emergencyContact.mobile,
+    nomineeName: data.nominee.name,
+    nomineeRelation: data.nominee.relation,
+    nomineeMobile: data.nominee.mobile,
+    nomineePercentage: data.nominee.percentage,
   }));
 
   const [errors, setErrors] = useState<
@@ -142,7 +146,7 @@ export function useEmployeeForm() {
           "accountHolderName",
           formData.accountHolderName.length > 0,
           "Required",
-        ); 
+        );
         check("bankName", formData.bankName.length > 0, "Required");
         check("accountNumber", formData.accountNumber.length > 0, "Required");
         check("ifscCode", formData.ifscCode.length > 0, "Required");
@@ -153,6 +157,26 @@ export function useEmployeeForm() {
           "em1Mobile",
           formData.em1Mobile.length === 10,
           "Must be 10 digits",
+        );
+
+        // <-- ADDED NOMINEE VALIDATION -->
+        check("nomineeName", formData.nomineeName.length > 0, "Required");
+        check(
+          "nomineeRelation",
+          formData.nomineeRelation.length > 0,
+          "Required",
+        );
+        check(
+          "nomineeMobile",
+          formData.nomineeMobile.length === 10,
+          "Must be 10 digits",
+        );
+
+        const perc = parseInt(formData.nomineePercentage, 10);
+        check(
+          "nomineePercentage",
+          !isNaN(perc) && perc >= 1 && perc <= 100,
+          "Must be 1-100",
         );
       }
 

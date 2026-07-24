@@ -39,4 +39,9 @@ export interface EmployeeFormData {
   em1Name: string;
   em1Relation: string;
   em1Mobile: string;
+  // Nominee Details
+  nomineeName: string;       
+  nomineeRelation: string;   
+  nomineeMobile: string;     
+  nomineePercentage: string; 
 }

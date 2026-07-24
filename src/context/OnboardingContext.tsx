@@ -50,6 +50,7 @@ export interface OnboardingData {
     micr: string;
   };
   emergencyContact: EmergencyContact;
+  nominee: { name: string; relation: string; mobile: string; percentage: string; };
 
   selfieUri: string | null;
   uploadedDocuments: string[];
@@ -99,6 +100,7 @@ const INITIAL_DATA: OnboardingData = {
     micr: "",
   },
   emergencyContact: { name: "", relation: "", mobile: "" },
+  nominee: { name: "", relation: "", mobile: "", percentage: "" },
 
   selfieUri: null,
   uploadedDocuments: [],
