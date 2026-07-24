@@ -45,7 +45,8 @@ export function useImagePickerAction() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: IMAGE_QUALITY,
-        allowsEditing: true, 
+        // Disable the native crop/preview screen for documents to instantly return the image
+        allowsEditing: uploadType === 'profile', 
       });
       processResult(result);
     } catch (error: any) {

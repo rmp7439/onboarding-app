@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
+  TouchableOpacity,
   ScrollView,
   Platform,
   ActivityIndicator,
@@ -186,38 +186,39 @@ export default function DocumentsScreen() {
           </View>
         ) : (
           <View style={styles.attachmentContainer}>
-            <View style={styles.fileInfoRow}>
-              {!isExisting && (
-                <Image source={{ uri: doc.uri }} style={styles.thumbnail} resizeMode="cover" />
-              )}
+            
+            <TouchableOpacity 
+              activeOpacity={0.7}
+              disabled={isSubmitting}
+              onPress={() => {
+                lightImpact();
+                openPicker('document', (uri, filename) => handlePickImage(doc.id, uri, filename));
+              }}
+              style={styles.successBox}
+            >
+              <View style={styles.successIconWrapper}>
+                <Text style={styles.successIcon}>✓</Text>
+              </View>
               <View style={styles.fileDetails}>
+                <Text style={styles.successTitle}>Document Attached</Text>
                 <Text
-                  style={[styles.filenameText, isExisting && { fontStyle: "italic", color: colors.textSecondary }]}
+                  style={[styles.filenameText, isExisting && { fontStyle: "italic", opacity: 0.8 }]}
                   numberOfLines={1}
                   ellipsizeMode="middle"
                 >
-                  {doc.filename}
+                  {doc.filename || "Attached"}
                 </Text>
               </View>
-            </View>
+              <Text style={styles.replaceHint}>Tap to replace</Text>
+            </TouchableOpacity>
+
             <View style={styles.cardActionRow}>
               <Button
-                title="Replace"
-                variant="outline"
-                disabled={isSubmitting}
-                onPress={() => {
-                  lightImpact();
-                  openPicker('document', (uri, filename) => handlePickImage(doc.id, uri, filename));
-                }}
-                style={styles.halfBtn}
-              />
-              <View style={styles.actionSpacer} />
-              <Button
-                title="Remove"
+                title="Remove Document"
                 variant="outline"
                 disabled={isSubmitting}
                 onPress={() => handleRemove(doc.id)}
-                style={styles.halfBtn}
+                style={styles.fullBtn}
               />
             </View>
           </View>
@@ -314,31 +315,51 @@ const styles = StyleSheet.create({
   actionContainer: { marginTop: spacing.xs },
   actionButton: { height: 44 },
   attachmentContainer: { marginTop: spacing.xs },
-  fileInfoRow: {
+  
+  // Fast Success Area Styling
+  successBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.background,
-    padding: spacing.sm,
+    backgroundColor: "#F0FDF4", // Light green background
+    padding: spacing.md,
     borderRadius: radius.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#DCFCE7",
   },
-  thumbnail: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.sm,
-    backgroundColor: colors.surface,
+  successIconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#22C55E",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  successIcon: {
+    color: "#FFF",
+    fontSize: 18,
+    fontWeight: typography.fontWeight.bold,
   },
   fileDetails: { flex: 1, marginLeft: spacing.md },
-  filenameText: {
+  successTitle: {
     fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+    color: "#166534",
+  },
+  filenameText: {
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.medium,
-    color: colors.text,
+    color: "#15803D",
+    marginTop: 2,
+  },
+  replaceHint: {
+    fontSize: typography.fontSize.xs,
+    color: "#166534",
+    opacity: 0.8,
+    marginLeft: spacing.sm,
   },
   cardActionRow: { flexDirection: "row", justifyContent: "space-between" },
-  halfBtn: { flex: 1, height: 40 },
-  actionSpacer: { width: spacing.md },
+  fullBtn: { flex: 1, height: 40 },
   footer: {
     paddingTop: spacing.md,
     paddingBottom: Platform.OS === "ios" ? spacing.xl : spacing.lg,
