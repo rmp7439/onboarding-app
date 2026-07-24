@@ -1,5 +1,4 @@
-import { formatDateForForm, mapBloodGroupFromBackend, mapEducationFromBackend } from "./dataMappers";
-import { OnboardingData } from "../context/OnboardingContext";
+import { formatDateForForm, mapBloodGroupFromBackend, mapEducationFromBackend, mapMaritalStatusFromBackend } from "./dataMappers";import { OnboardingData } from "../context/OnboardingContext";
 import { Href, Router } from "expo-router";
 
 export const startEditingApplication = (
@@ -23,6 +22,7 @@ export const startEditingApplication = (
       dob: formatDateForForm(profile.dateOfBirth || ""),
       mobile: profile.mobile || "",
       bloodGroup: mapBloodGroupFromBackend(profile.bloodGroup),
+      maritalStatus: mapMaritalStatusFromBackend(profile.maritalStatus),
       highestEducation: mapEducationFromBackend(profile.education),
     },
     identity: {

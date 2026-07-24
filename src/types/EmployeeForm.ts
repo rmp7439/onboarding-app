@@ -11,6 +11,7 @@ export interface EmployeeFormData {
   dateOfBirth: string;
   mobileNumber: string;
   bloodGroup: string;
+  maritalStatus: string;
   highestEducation: string;
   // Identity Details
   aadhaarNumber: string;

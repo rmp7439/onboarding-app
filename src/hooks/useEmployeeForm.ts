@@ -16,6 +16,7 @@ export function useEmployeeForm() {
     dateOfBirth: data.personal.dob,
     mobileNumber: data.personal.mobile,
     bloodGroup: data.personal.bloodGroup,
+    maritalStatus: data.personal.maritalStatus,
     highestEducation: data.personal.highestEducation,
     aadhaarNumber: data.identity.aadhaar,
     panNumber: data.identity.pan,
@@ -95,6 +96,7 @@ export function useEmployeeForm() {
           "Must be 10 digits",
         );
         check("bloodGroup", formData.bloodGroup.length > 0, "Required");
+        check("maritalStatus", formData.maritalStatus.length > 0, "Required");
         check("highestEducation", formData.highestEducation.length > 0, "Required");
       } else if (step === 2) {
         check(

@@ -40,6 +40,26 @@ export const mapEducationFromBackend = (edu: string): string => {
   return map[edu] || "Other";
 };
 
+export const mapMaritalStatusToBackend = (status: string): string => {
+  const map: Record<string, string> = {
+    "Single": "SINGLE", 
+    "Married": "MARRIED", 
+    "Divorced": "DIVORCED",
+    "Widowed": "WIDOWED"
+  };
+  return map[status] || "SINGLE";
+};
+
+export const mapMaritalStatusFromBackend = (status: string): string => {
+  const map: Record<string, string> = {
+    "SINGLE": "Single", 
+    "MARRIED": "Married", 
+    "DIVORCED": "Divorced",
+    "WIDOWED": "Widowed"
+  };
+  return map[status] || "Single";
+};
+
 export const parseDateString = (dateStr: string): string => {
   const [day, month, year] = dateStr.split('/');
   return new Date(`${year}-${month}-${day}T00:00:00.000Z`).toISOString();
@@ -64,6 +84,7 @@ export const mapEmployeeData = (data: OnboardingData) => {
     husbandName: data.personal.husbandName || null,
     gender: data.personal.gender.toUpperCase(),
     bloodGroup: mapBloodGroup(data.personal.bloodGroup),
+    maritalStatus: mapMaritalStatusToBackend(data.personal.maritalStatus),
     education: mapEducationToBackend(data.personal.highestEducation),
     dateOfBirth: parseDateString(data.personal.dob),
     joiningDate: parseDateString(data.employment.joiningDate),

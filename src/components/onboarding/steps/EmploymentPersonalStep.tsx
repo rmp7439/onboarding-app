@@ -13,6 +13,7 @@ import { formatMobile } from "../../../utils/formatters";
 import { colors, spacing, typography } from "../../../theme";
 import { EDUCATION_OPTIONS } from "@/src/constants/Education";
 import { SearchableDropdown } from "../../index";
+import { MARITAL_STATUS_OPTIONS } from "@/src/constants/MaritalStatus";
 
 interface StepProps {
   formData: EmployeeFormData;
@@ -158,6 +159,15 @@ export function EmploymentPersonalStep({
         />
         {errors.bloodGroup && <Input label="" value="" error={errors.bloodGroup} editable={false} style={{display: 'none'}} />}
 
+        <SearchableDropdown
+          label="Marital Status"
+          value={formData.maritalStatus}
+          error={errors.maritalStatus}
+          options={MARITAL_STATUS_OPTIONS}
+          onSelect={(val) => updateField("maritalStatus", val)}
+          required
+        />
+        
         <SearchableDropdown
           label="Highest Education"
           value={formData.highestEducation}
