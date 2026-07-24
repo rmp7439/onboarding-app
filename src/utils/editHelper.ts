@@ -1,4 +1,5 @@
-import { formatDateForForm, mapBloodGroupFromBackend, mapEducationFromBackend, mapMaritalStatusFromBackend } from "./dataMappers";import { OnboardingData } from "../context/OnboardingContext";
+import { formatDateForForm, mapBloodGroupFromBackend, mapEducationFromBackend, mapMaritalStatusFromBackend } from "./dataMappers";
+import { OnboardingData } from "../context/OnboardingContext";
 import { Href, Router } from "expo-router";
 
 export const startEditingApplication = (
@@ -6,6 +7,24 @@ export const startEditingApplication = (
   updateData: (newData: Partial<OnboardingData>) => void,
   router: Router
 ) => {
+  const names = profile.nomineeName ? profile.nomineeName.split(',').map((s: string)=>s.trim()) : [];
+  const relations = profile.nomineeRelation ? profile.nomineeRelation.split(',').map((s: string)=>s.trim()) : [];
+  const mobiles = profile.nomineeMobile ? profile.nomineeMobile.split(',').map((s: string)=>s.trim()) : [];
+  
+  const nominees = [];
+  if (names.length > 0) {
+      for (let i=0; i<names.length; i++) {
+          nominees.push({
+              name: names[i] || "",
+              relation: relations[i] || "",
+              mobile: mobiles[i] || "",
+              percentage: names.length === 1 ? (profile.nomineePercentage ? profile.nomineePercentage.toString() : "100") : ""
+          });
+      }
+  } else {
+      nominees.push({ name: "", relation: "", mobile: "", percentage: "100" });
+  }
+
   updateData({
     isEditMode: true,
     editEmployeeId: profile.id,
@@ -50,16 +69,12 @@ export const startEditingApplication = (
       ifsc: profile.ifsc || "",
       micr: profile.micr || "",
     },
+    nomineesCount: nominees.length.toString(),
+    nominees: nominees,
     emergencyContact: {
       name: profile.emergencyName || "",
       relation: profile.emergencyRelation || "",
       mobile: profile.emergencyPhone || "",
-    },
-    nominee: {                                                          
-      name: profile.nomineeName || "",                                  
-      relation: profile.nomineeRelation || "",                          
-      mobile: profile.nomineeMobile || "",                              
-      percentage: profile.nomineePercentage ? profile.nomineePercentage.toString() : "", 
     },
     selfieUri: profile.selfieUrl || profile.selfieFilename ? "EXISTING" : null,
     existingDocuments: profile.documents?.map((d: any) => d.type) || [],

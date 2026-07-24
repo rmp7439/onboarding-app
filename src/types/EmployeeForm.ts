@@ -1,25 +1,35 @@
+export interface NomineeForm {
+  name: string;
+  relation: string;
+  mobile: string;
+  percentage: string;
+}
+
 export interface EmployeeFormData {
-  // Employment Details
+  // Step 1: Employment
   dateOfJoining: string;
   unitSite: string;
-  // Personal Details
   firstName: string;
   surname: string;
-  fatherName: string;
-  husbandName: string;
+  mobileNumber: string;
   gender: string;
   dateOfBirth: string;
-  mobileNumber: string;
+
+  // Step 2: Personal
+  fatherName: string;
+  husbandName: string;
   bloodGroup: string;
   maritalStatus: string;
   highestEducation: string;
-  // Identity Details
+
+  // Step 3: Identity
   aadhaarNumber: string;
   panNumber: string;
   uanNumber: string;
   esicNumber: string;
   drivingLicence: string;
-  // Address
+
+  // Step 4: Address
   permanentAddress: string;
   currentAddress: string;
   city: string;
@@ -29,19 +39,18 @@ export interface EmployeeFormData {
   currentCity: string;            
   currentState: string;           
   currentPinCode: string;         
-  // Bank Details
+
+  // Step 5: Bank & Nominees
   accountHolderName: string; 
   bankName: string;
   accountNumber: string;
   ifscCode: string;
   micrCode: string;
-  // Emergency Contact 
+  numberOfNominees: string;
+  nominees: NomineeForm[];
+
+  // Step 6: Emergency Contact
   em1Name: string;
   em1Relation: string;
   em1Mobile: string;
-  // Nominee Details
-  nomineeName: string;       
-  nomineeRelation: string;   
-  nomineeMobile: string;     
-  nomineePercentage: string; 
 }

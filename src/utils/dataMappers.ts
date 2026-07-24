@@ -77,7 +77,7 @@ export const formatDateForForm = (isoString: string): string => {
 
 export const mapEmployeeData = (data: OnboardingData) => {
   return {
-    unit: data.employment.unit, // FIX: Actually send the unit to the backend
+    unit: data.employment.unit, 
     firstName: data.personal.firstName,
     surname: data.personal.surname,
     fatherName: data.personal.fatherName,
@@ -103,7 +103,7 @@ export const mapEmployeeData = (data: OnboardingData) => {
     currentCity: data.address.currentCity || null,                       
     currentState: data.address.currentState || null,                     
     currentPinCode: data.address.currentPinCode || null,                 
-    accountHolderName: data.bank.accountHolderName, // <-- Added
+    accountHolderName: data.bank.accountHolderName, 
     bankName: data.bank.bankName,
     accountNumber: data.bank.accountNumber,
     ifsc: data.bank.ifsc,
@@ -112,10 +112,12 @@ export const mapEmployeeData = (data: OnboardingData) => {
     emergencyName: data.emergencyContact.name,
     emergencyRelation: data.emergencyContact.relation,
     emergencyPhone: data.emergencyContact.mobile,
-    nomineeName: data.nominee.name,                          
-    nomineeRelation: data.nominee.relation,                  
-    nomineeMobile: data.nominee.mobile,                      
-    nomineePercentage: parseInt(data.nominee.percentage, 10),
+
+    // Safely mapping dynamic multiple nominees into scalar fields for backward compatibility
+    nomineeName: data.nominees.map(n => n.name).join(', '),
+    nomineeRelation: data.nominees.map(n => n.relation).join(', '),
+    nomineeMobile: data.nominees.map(n => n.mobile).join(', '),
+    nomineePercentage: data.nominees.length === 1 ? 100 : null,
   };
 };
 

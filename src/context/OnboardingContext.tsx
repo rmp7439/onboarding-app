@@ -6,6 +6,13 @@ export interface EmergencyContact {
   mobile: string;
 }
 
+export interface NomineeData {
+  name: string;
+  relation: string;
+  mobile: string;
+  percentage: string;
+}
+
 export interface OnboardingData {
   isEditMode: boolean;
   editEmployeeId: string | null;
@@ -25,7 +32,8 @@ export interface OnboardingData {
   };
   bank: { accountHolderName: string; bankName: string; accountNumber: string; ifsc: string; micr: string; };
   emergencyContact: EmergencyContact;
-  nominee: { name: string; relation: string; mobile: string; percentage: string; };
+  nomineesCount: string;
+  nominees: NomineeData[];
 
   selfieUri: string | null;
   uploadedDocuments: string[];
@@ -56,7 +64,8 @@ const INITIAL_DATA: OnboardingData = {
   },
   bank: { accountHolderName: "", bankName: "", accountNumber: "", ifsc: "", micr: "" },
   emergencyContact: { name: "", relation: "", mobile: "" },
-  nominee: { name: "", relation: "", mobile: "", percentage: "" },
+  nomineesCount: "1",
+  nominees: [{ name: "", relation: "", mobile: "", percentage: "100" }],
 
   selfieUri: null,
   uploadedDocuments: [],

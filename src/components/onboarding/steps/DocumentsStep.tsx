@@ -3,19 +3,14 @@ import { View, TextInput } from 'react-native';
 import { Input } from '../../index';
 import { FormSection } from '../FormSection';
 import { EmployeeFormData } from '../../../types/EmployeeForm';
-import { useOnboarding } from '../../../context/OnboardingContext';
 
 interface StepProps {
   formData: EmployeeFormData;
   updateField: (field: keyof EmployeeFormData, value: string) => void;
-  onNextStep?: () => void;
-  errors: Partial<Record<keyof EmployeeFormData, string>>;
+  errors: Partial<Record<keyof EmployeeFormData | string, string>>;
 }
 
-export function IdentityStep({ formData, updateField, onNextStep, errors }: StepProps) {
-  const { data } = useOnboarding();
-  const isReq = (f: string) => data.unitConfig.requiredFields.includes(f);
-
+export function DocumentsStep({ formData, updateField, errors }: StepProps) {
   const panRef = useRef<TextInput>(null);
   const uanRef = useRef<TextInput>(null);
   const esicRef = useRef<TextInput>(null);
@@ -23,7 +18,7 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
 
   return (
     <View>
-      <FormSection title="Identity Details">
+      <FormSection title="Government Documents">
         <Input
           label="Aadhaar Number"
           value={formData.aadhaarNumber}
@@ -32,7 +27,6 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           returnKeyType="next"
           onSubmitEditing={() => panRef.current?.focus()}
           submitBehavior="submit"
-          required={isReq('aadhaar')}
         />
         
         <Input
@@ -45,7 +39,6 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           returnKeyType="next"
           onSubmitEditing={() => uanRef.current?.focus()}
           submitBehavior="submit"
-          required={isReq('pan')}
         />
         
         <Input
@@ -58,7 +51,6 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           returnKeyType="next"
           onSubmitEditing={() => esicRef.current?.focus()}
           submitBehavior="submit"
-          required={isReq('uan')}
         />
         
         <Input 
@@ -71,7 +63,6 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           returnKeyType="next"
           onSubmitEditing={() => dlRef.current?.focus()}
           submitBehavior="submit"
-          required={isReq('esic')}
         />
 
         <Input 
@@ -82,8 +73,6 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           onChangeText={(text) => updateField('drivingLicence', text)} 
           keyboardType="default"
           returnKeyType="done"
-          onSubmitEditing={onNextStep}
-          required={isReq('drivingLicence')}
         />
       </FormSection>
     </View>

@@ -10,22 +10,24 @@ import {
 import { useRouter } from "expo-router";
 import { Screen, SectionTitle, Button } from "../../../src/components";
 import { ProgressIndicator } from "../../../src/components/onboarding/ProgressIndicator";
-import { EmploymentPersonalStep } from "../../../src/components/onboarding/steps/EmploymentPersonalStep";
-import { IdentityStep } from "../../../src/components/onboarding/steps/IdentityStep";
-import { AddressBankStep } from "../../../src/components/onboarding/steps/AddressBankStep";
+import { EmploymentStep } from "../../../src/components/onboarding/steps/EmploymentStep";
+import { PersonalStep } from "../../../src/components/onboarding/steps/PersonalStep";
+import { DocumentsStep } from "../../../src/components/onboarding/steps/DocumentsStep";
+import { AddressStep } from "../../../src/components/onboarding/steps/AddressStep";
+import { BankNomineeStep } from "../../../src/components/onboarding/steps/BankNomineeStep";
 import { EmergencyContactStep } from "../../../src/components/onboarding/steps/EmergencyContactStep";
 import { useOnboarding } from "../../../src/context/OnboardingContext";
 import { useEmployeeForm } from "../../../src/hooks/useEmployeeForm";
 import { colors, spacing } from "../../../src/theme";
 import { lightImpact, warning } from "../../../src/utils/haptics";
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 6;
 
 export default function EmployeeDetailsScreen() {
   const router = useRouter();
   const { updateData } = useOnboarding();
   
-  const { formData, updateField, errors, validateStep } = useEmployeeForm();
+  const { formData, updateField, updateNominee, errors, validateStep } = useEmployeeForm();
 
   const { width } = useWindowDimensions();
   const stepWidth = width - spacing.md * 2;
@@ -35,6 +37,7 @@ export default function EmployeeDetailsScreen() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   const handleNextStep = useCallback(() => {
+    // Validate only the current active step before allowing progression
     if (!validateStep(currentStep)) {
       warning();
       return; 
@@ -81,12 +84,15 @@ export default function EmployeeDetailsScreen() {
         dob: formData.dateOfBirth,
         mobile: formData.mobileNumber,
         bloodGroup: formData.bloodGroup,
+        maritalStatus: formData.maritalStatus,
+        highestEducation: formData.highestEducation,
       },
       identity: {
         aadhaar: formData.aadhaarNumber,
         pan: formData.panNumber,
         uan: formData.uanNumber,
         esic: formData.esicNumber,
+        drivingLicence: formData.drivingLicence,
       },
       address: {
         permanent: formData.permanentAddress,
@@ -94,20 +100,27 @@ export default function EmployeeDetailsScreen() {
         city: formData.city,
         state: formData.state,
         pinCode: formData.pinCode,
+        permanentPoliceStation: formData.permanentPoliceStation,
+        currentCity: formData.currentCity,
+        currentState: formData.currentState,
+        currentPinCode: formData.currentPinCode,
       },
       bank: {
         bankName: formData.bankName,
+        accountHolderName: formData.accountHolderName,
         accountNumber: formData.accountNumber,
         ifsc: formData.ifscCode,
-        branch: formData.branch,
         micr: formData.micrCode,
       },
+      nomineesCount: formData.numberOfNominees,
+      nominees: formData.nominees,
       emergencyContact: {
         name: formData.em1Name,
         relation: formData.em1Relation,
         mobile: formData.em1Mobile,
       },
     });
+    // Move to the selfie capture / document upload screens
     router.push("/(onboarding)/new-guard/capture-photo");
   };
 
@@ -136,37 +149,34 @@ export default function EmployeeDetailsScreen() {
               },
             ]}
           >
+            {/* Step 1: Employment Details */}
             <View style={{ width: stepWidth }}>
-              <EmploymentPersonalStep
-                formData={formData}
-                updateField={updateField}
-                currentYear={currentYear}
-                errors={errors} 
-              />
+              <EmploymentStep formData={formData} updateField={updateField} currentYear={currentYear} errors={errors} />
             </View>
+            
+            {/* Step 2: Personal Details */}
             <View style={{ width: stepWidth }}>
-              <IdentityStep 
-                formData={formData} 
-                updateField={updateField} 
-                errors={errors}
-                onNextStep={handleNextStep}
-              />
+              <PersonalStep formData={formData} updateField={updateField} errors={errors} />
             </View>
+            
+            {/* Step 3: Documents (Identity) */}
             <View style={{ width: stepWidth }}>
-              <AddressBankStep 
-                formData={formData} 
-                updateField={updateField} 
-                errors={errors}
-                onNextStep={handleNextStep}
-              />
+              <DocumentsStep formData={formData} updateField={updateField} errors={errors} />
             </View>
+            
+            {/* Step 4: Address Details */}
             <View style={{ width: stepWidth }}>
-              <EmergencyContactStep
-                formData={formData}
-                updateField={updateField}
-                errors={errors}
-                onNextStep={handleNextStep}
-              />
+              <AddressStep formData={formData} updateField={updateField} errors={errors} />
+            </View>
+            
+            {/* Step 5: Bank Details & Nominees */}
+            <View style={{ width: stepWidth }}>
+              <BankNomineeStep formData={formData} updateField={updateField} updateNominee={updateNominee} errors={errors} />
+            </View>
+            
+            {/* Step 6: Emergency Contact */}
+            <View style={{ width: stepWidth }}>
+              <EmergencyContactStep formData={formData} updateField={updateField} errors={errors} />
             </View>
           </Animated.View>
         </View>
@@ -182,7 +192,7 @@ export default function EmployeeDetailsScreen() {
           />
         )}
         <Button
-          title="Continue"
+          title={currentStep === TOTAL_STEPS ? "Review Details" : "Continue"}
           onPress={handleNextStep}
           style={styles.actionBtn}
         />

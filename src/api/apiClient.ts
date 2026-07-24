@@ -139,13 +139,5 @@ export const api = {
 
   getUnits: () => {
     return safeRequest("/units", { method: "GET" });
-  },
-
-  getBanks: () => {
-    return safeRequest("/banks", { method: "GET" });
-  },
-
-  getActiveBanks: () => {
-    return safeRequest("/banks?active=true", { method: "GET" });
-  },
+  }
 };
