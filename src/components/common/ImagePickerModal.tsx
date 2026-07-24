@@ -11,6 +11,7 @@ import { colors, spacing, typography, radius } from "../../theme";
 
 interface ImagePickerModalProps {
   visible: boolean;
+  uploadType: 'profile' | 'document';
   onClose: () => void;
   onFrontCamera: () => void;
   onRearCamera: () => void;
@@ -19,6 +20,7 @@ interface ImagePickerModalProps {
 
 export default function ImagePickerModal({
   visible,
+  uploadType,
   onClose,
   onFrontCamera,
   onRearCamera,
@@ -36,22 +38,26 @@ export default function ImagePickerModal({
       <View style={styles.modalOverlay}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={styles.bottomSheet}>
-          <Text style={styles.sheetTitle}>Select Image</Text>
+          <Text style={styles.sheetTitle}>
+            {uploadType === 'profile' ? "Select Image" : "Select Document"}
+          </Text>
           
-          <Pressable
-            style={styles.sheetButton}
-            android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-            onPress={onFrontCamera}
-          >
-            <Text style={styles.sheetButtonText}>📷 Take Selfie</Text>
-          </Pressable>
+          {uploadType === 'profile' && (
+            <Pressable
+              style={styles.sheetButton}
+              android_ripple={{ color: "rgba(0,0,0,0.1)" }}
+              onPress={onFrontCamera}
+            >
+              <Text style={styles.sheetButtonText}>📷 Take Selfie</Text>
+            </Pressable>
+          )}
           
           <Pressable
             style={styles.sheetButton}
             android_ripple={{ color: "rgba(0,0,0,0.1)" }}
             onPress={onRearCamera}
           >
-            <Text style={styles.sheetButtonText}>📸 Use Rear Camera</Text>
+            <Text style={styles.sheetButtonText}>📸 Take Photo</Text>
           </Pressable>
           
           <Pressable

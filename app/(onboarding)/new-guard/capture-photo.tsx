@@ -65,14 +65,14 @@ export default function CapturePhotoScreen() {
             <Button 
               title="Replace Photo" 
               variant="outline" 
-              onPress={() => openPicker(handleSelect)} 
+              onPress={() => openPicker('profile', handleSelect)} 
               style={[styles.fullButton, styles.secondaryButton]} 
             />
           </>
         ) : (
           <Button 
             title="Select Photo" 
-            onPress={() => openPicker(handleSelect)} 
+            onPress={() => openPicker('profile', handleSelect)} 
             style={styles.fullButton} 
           />
         )}

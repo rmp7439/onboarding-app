@@ -8,13 +8,20 @@ import { IMAGE_QUALITY } from '../constants/App';
 export function useImagePickerAction() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isCameraVisible, setCameraVisible] = useState(false);
+  const [uploadType, setUploadType] = useState<'profile' | 'document'>('profile');
   
-  // Track requested camera facing independently
   const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('front');
   
   const callbacks = useRef<{ onSelect: (uri: string, filename: string) => void } | null>(null);
 
-  // Dedicated Launch Paths
+  const processResult = (result: ImagePicker.ImagePickerResult) => {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      const filename = asset.fileName || asset.uri.split("/").pop() || "image.jpg";
+      if (callbacks.current) callbacks.current.onSelect(asset.uri, filename);
+    }
+  };
+
   const launchFrontCamera = () => {
     setModalVisible(false);
     setCameraFacing('front');
@@ -38,28 +45,34 @@ export function useImagePickerAction() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: IMAGE_QUALITY,
-        allowsEditing: true, // Native cropping
+        allowsEditing: true, 
       });
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        const filename = asset.fileName || asset.uri.split("/").pop() || "image.jpg";
-        if (callbacks.current) callbacks.current.onSelect(asset.uri, filename);
-      }
+      processResult(result);
     } catch (error: any) {
       Alert.alert("Error", error.message || "Failed to open gallery.");
     }
   };
 
-  const openPicker = (onSelect: (uri: string, filename: string) => void) => {
+  const openPicker = (type: 'profile' | 'document', onSelect: (uri: string, filename: string) => void) => {
     callbacks.current = { onSelect };
+    setUploadType(type);
     
     if (Platform.OS === 'ios') {
+      const options = type === 'profile' 
+        ? ['Cancel', '📷 Take Selfie', '📸 Take Photo', '🖼 Choose from Gallery']
+        : ['Cancel', '📸 Take Photo', '🖼 Choose from Gallery'];
+
       ActionSheetIOS.showActionSheetWithOptions(
-        { options: ['Cancel', '📷 Take Selfie', '📸 Take Photo', '🖼 Choose from Gallery'], cancelButtonIndex: 0 },
+        { options, cancelButtonIndex: 0 },
         (buttonIndex) => {
-          if (buttonIndex === 1) launchFrontCamera();
-          if (buttonIndex === 2) launchRearCamera();
-          if (buttonIndex === 3) launchGallery();
+          if (type === 'profile') {
+            if (buttonIndex === 1) launchFrontCamera();
+            if (buttonIndex === 2) launchRearCamera();
+            if (buttonIndex === 3) launchGallery();
+          } else {
+            if (buttonIndex === 1) launchRearCamera();
+            if (buttonIndex === 2) launchGallery();
+          }
         }
       );
     } else {
@@ -71,6 +84,7 @@ export function useImagePickerAction() {
     <>
       <ImagePickerModal
         visible={isModalVisible}
+        uploadType={uploadType}
         onClose={() => setModalVisible(false)}
         onFrontCamera={launchFrontCamera}
         onRearCamera={launchRearCamera}

@@ -67,7 +67,6 @@ export default function DocumentsScreen() {
     }
   }, [data.isEditMode, data.existingDocuments]);
 
-  // Delegating the processing entirely to the unified hook
   const handlePickImage = (id: string, uri: string, filename: string) => {
     setErrorText(null);
     setDocuments((prev) => prev.map((doc) => doc.id === id ? { ...doc, uri, filename } : doc));
@@ -180,7 +179,7 @@ export default function DocumentsScreen() {
               disabled={isSubmitting}
               onPress={() => {
                 lightImpact();
-                openPicker((uri, filename) => handlePickImage(doc.id, uri, filename));
+                openPicker('document', (uri, filename) => handlePickImage(doc.id, uri, filename));
               }}
               style={styles.actionButton}
             />
@@ -208,7 +207,7 @@ export default function DocumentsScreen() {
                 disabled={isSubmitting}
                 onPress={() => {
                   lightImpact();
-                  openPicker((uri, filename) => handlePickImage(doc.id, uri, filename));
+                  openPicker('document', (uri, filename) => handlePickImage(doc.id, uri, filename));
                 }}
                 style={styles.halfBtn}
               />
