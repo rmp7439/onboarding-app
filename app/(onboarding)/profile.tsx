@@ -32,6 +32,7 @@ interface EmployeeProfile {
   pan?: string;
   uan?: string;
   esic?: string;
+  drivingLicence?: string;
   permanentAddress?: string;
   currentAddress?: string;
   city?: string;

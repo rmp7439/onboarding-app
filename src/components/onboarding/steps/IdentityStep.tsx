@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { use, useRef } from 'react';
 import { View, TextInput } from 'react-native';
 import { Input } from '../../index'; 
 import { FormSection } from '../FormSection';
@@ -15,6 +15,7 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
   const panRef = useRef<TextInput>(null);
   const uanRef = useRef<TextInput>(null);
   const esicRef = useRef<TextInput>(null);
+  const dlRef = useRef<TextInput>(null);
 
   return (
     <View>
@@ -59,6 +60,18 @@ export function IdentityStep({ formData, updateField, onNextStep, errors }: Step
           value={formData.esicNumber}
           error={errors.esicNumber} 
           onChangeText={(text) => updateField('esicNumber', text)} 
+          keyboardType="default"
+          returnKeyType="next"
+          onSubmitEditing={() => dlRef.current?.focus()}
+          submitBehavior="submit"
+        />
+
+        <Input 
+          ref={dlRef}
+          label="Driving Licence (Optional)" 
+          value={formData.drivingLicence}
+          error={errors.drivingLicence} 
+          onChangeText={(text) => updateField('drivingLicence', text)} 
           keyboardType="default"
           returnKeyType="done"
           onSubmitEditing={onNextStep}

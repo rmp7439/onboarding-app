@@ -11,15 +11,38 @@ export interface OnboardingData {
   editEmployeeId: string | null;
   existingDocuments: string[];
 
-  employment: { joiningDate: string; unit: string; };
+  employment: { joiningDate: string; unit: string };
   personal: {
-    firstName: string; surname: string; fatherName: string;
-    husbandName: string; gender: string; dob: string;
-    mobile: string; bloodGroup: string;
+    firstName: string;
+    surname: string;
+    fatherName: string;
+    husbandName: string;
+    gender: string;
+    dob: string;
+    mobile: string;
+    bloodGroup: string;
   };
-  identity: { aadhaar: string; pan: string; uan: string; esic: string; };
-  address: { permanent: string; current: string; city: string; state: string; pinCode: string; };
-  bank: { bankName: string; accountNumber: string; ifsc: string; branch: string; micr: string; };
+  identity: {
+    aadhaar: string;
+    pan: string;
+    uan: string;
+    esic: string;
+    drivingLicence: string;
+  };
+  address: {
+    permanent: string;
+    current: string;
+    city: string;
+    state: string;
+    pinCode: string;
+  };
+  bank: {
+    bankName: string;
+    accountNumber: string;
+    ifsc: string;
+    branch: string;
+    micr: string;
+  };
   emergencyContact: EmergencyContact;
 
   selfieUri: string | null;
@@ -39,11 +62,16 @@ const INITIAL_DATA: OnboardingData = {
 
   employment: { joiningDate: "", unit: "" },
   personal: {
-    firstName: "", surname: "", fatherName: "",
-    husbandName: "", gender: "", dob: "",
-    mobile: "", bloodGroup: "",
+    firstName: "",
+    surname: "",
+    fatherName: "",
+    husbandName: "",
+    gender: "",
+    dob: "",
+    mobile: "",
+    bloodGroup: "",
   },
-  identity: { aadhaar: "", pan: "", uan: "", esic: "" },
+  identity: { aadhaar: "", pan: "", uan: "", esic: "", drivingLicence: "" },
   address: { permanent: "", current: "", city: "", state: "", pinCode: "" },
   bank: { bankName: "", accountNumber: "", ifsc: "", branch: "", micr: "" },
   emergencyContact: { name: "", relation: "", mobile: "" },
@@ -52,7 +80,9 @@ const INITIAL_DATA: OnboardingData = {
   uploadedDocuments: [],
 };
 
-const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
+const OnboardingContext = createContext<OnboardingContextType | undefined>(
+  undefined,
+);
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<OnboardingData>(INITIAL_DATA);

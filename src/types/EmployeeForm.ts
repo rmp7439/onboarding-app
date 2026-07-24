@@ -16,6 +16,7 @@ export interface EmployeeFormData {
   panNumber: string;
   uanNumber: string;
   esicNumber: string;
+  drivingLicence: string;
   // Address
   permanentAddress: string;
   currentAddress: string;

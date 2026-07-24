@@ -29,6 +29,7 @@ export const startEditingApplication = (
       pan: profile.pan || "",
       uan: profile.uan || "",
       esic: profile.esic || "",
+      drivingLicence: profile.drivingLicence || "",
     },
     address: {
       permanent: profile.permanentAddress || "",

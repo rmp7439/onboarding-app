@@ -20,6 +20,7 @@ export function useEmployeeForm() {
     panNumber: data.identity.pan,
     uanNumber: data.identity.uan,
     esicNumber: data.identity.esic,
+    drivingLicence: data.identity.drivingLicence,
     permanentAddress: data.address.permanent,
     currentAddress: data.address.current,
     city: data.address.city,

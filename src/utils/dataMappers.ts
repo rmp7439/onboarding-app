@@ -51,6 +51,7 @@ export const mapEmployeeData = (data: OnboardingData) => {
     pan: data.identity.pan || null,
     uan: data.identity.uan || null,
     esic: data.identity.esic || null,
+    drivingLicence: data.identity.drivingLicence || null,
     permanentAddress: data.address.permanent,
     currentAddress: data.address.current,
     city: data.address.city,
