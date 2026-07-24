@@ -35,23 +35,25 @@ export function AddressBankStep({
   const { stateOptions: currStateOptions, cityOptions: currCityOptions } =
     useIndianLocations(formData.currentState);
 
-  const [bankOptions, setBankOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
+  const [bankOptions, setBankOptions] = useState<{label: string, value: string}[]>([]);
 
   useEffect(() => {
-    // Fetch banks from Master API
-    api
-      .getBanks()
-      .then((data: any) => {
-        const mappedBanks = data.map((b: any) => ({
-          label: b.name,
-          value: b.name,
-        }));
-        setBankOptions(mappedBanks);
+    let isActive = true;
+    api.getActiveBanks()
+      .then((banks: any) => {
+        if (isActive) {
+          setBankOptions(banks.map((b: any) => ({ label: b.name, value: b.name })));
+        }
       })
-      .catch((err) => console.error("Failed to load banks", err));
+      .catch((err) => console.error("Failed to load active banks", err));
+      
+    return () => { isActive = false; };
   }, []);
+
+  const currentBankOptions = [...bankOptions];
+  if (formData.bankName && !currentBankOptions.find(o => o.value === formData.bankName)) {
+    currentBankOptions.push({ label: formData.bankName, value: formData.bankName });
+  }
 
   const handlePermStateChange = (newState: string) => {
     if (newState !== formData.state) {
@@ -168,7 +170,6 @@ export function AddressBankStep({
 
       <FormSection title="Bank Details">
         <Input
-          ref={accHolderRef}
           label="Account Holder Name"
           value={formData.accountHolderName}
           error={errors.accountHolderName}
@@ -176,7 +177,6 @@ export function AddressBankStep({
             if (isValidNameInput(text)) updateField("accountHolderName", text);
           }}
           returnKeyType="next"
-          submitBehavior="submit"
         />
 
         <SearchableDropdown
@@ -184,7 +184,7 @@ export function AddressBankStep({
           placeholder="Select Bank"
           value={formData.bankName}
           error={errors.bankName}
-          options={bankOptions}
+          options={currentBankOptions}
           onSelect={(val) => updateField("bankName", val)}
           required
         />

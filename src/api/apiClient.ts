@@ -138,6 +138,10 @@ export const api = {
     return safeRequest("/employee/my-applications", { method: "GET" });
   },
 
+  getActiveBanks: () => {
+    return safeRequest("/banks?active=true", { method: "GET" });
+  },
+
   getBanks: () => {
     return safeRequest("/banks", { method: "GET" });
   },
