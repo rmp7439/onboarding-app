@@ -19,7 +19,7 @@ export const startEditingApplication = (
       surname: profile.surname || "",
       fatherName: profile.fatherName || "",
       husbandName: profile.husbandName || "",
-      gender: profile.gender === "FEMALE" ? "Female" : "Male",
+      gender: profile.gender === "FEMALE" ? "Female" : profile.gender === "OTHER" ? "Other" : "Male",
       dob: formatDateForForm(profile.dateOfBirth || ""),
       mobile: profile.mobile || "",
       bloodGroup: mapBloodGroupFromBackend(profile.bloodGroup),
